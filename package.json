@@ -17,5 +17,10 @@
   },
   "dependencies": {
     "gettext-parser": "^1.2.0"
+  },
+  "babel": {
+    "presets": [
+      "es2015"
+    ]
   }
 }
