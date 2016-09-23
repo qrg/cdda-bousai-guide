@@ -19,7 +19,8 @@
     "eslint": "^3.5.0"
   },
   "dependencies": {
-    "gettext-parser": "^1.2.0"
+    "gettext-parser": "^1.2.0",
+    "glob": "^7.0.6"
   },
   "babel": {
     "presets": [

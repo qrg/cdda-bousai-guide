@@ -2,18 +2,22 @@
 
 import test from 'ava';
 import search from '../src/search';
-import dictionary from './dummy-dictionary';
+import items from './dummy-items';
 
-const SEARCH_TERM = 'アトミックコーヒー';
-let results;
-
-test.beforeEach(() => results = search(SEARCH_TERM, dictionary));
-
-test('returns Array includes all of matched entries.', t => {
+test('Returns Array includes all of matched entries.', t => {
+  const term = 'アトミックコーヒー';
+  const results = search(term, items);
   t.true(Array.isArray(results));
-  t.is(results.length, 4);
+  t.is(results.length, 2);
 });
 
-test('an exact matched is the first element of results.', t => {
-  t.is(results[0]['msgstr'][0], SEARCH_TERM);
+test('An exact matched is the first element of results.', t => {
+  const term = 'アトミックコーヒー';
+  const results = search(term, items);
+  t.is(results[0]['translations'][0], term);
+});
+
+test('Returns empty array if there are nothing matched.', t => {
+  const results = search('aaa', items);
+  t.is(results.length, 0);
 });

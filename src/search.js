@@ -1,18 +1,23 @@
 'use strict';
 
 const includes = (target, term) => {
+  if (!term || !target) return false;
   if (Array.isArray(target)) {
-    return target.some(str => str.includes(term));
+    return target.some(v => {
+      return v.includes(term);
+    });
   }
   return target.includes(term);
 };
 
-export default function (term, dictionary) {
-  const matched = [...dictionary.values()].filter((v) => includes(v.msgstr, term));
+export default function (term, items) {
 
-  return matched.sort((a, b) => {
-    if (a.msgstr.some(v => v === term)) return -1;
-    if (b.msgstr.some(v => v === term)) return 1;
-    return 0;
-  });
+  return items
+    .filter(item => includes(item.name, term) || includes(item.translations, term))
+    .sort((a, b) => {
+      if (a.name === term) return -1;
+      if (b.name === term) return 1;
+      return 0;
+    });
+
 }
