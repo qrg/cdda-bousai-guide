@@ -33,7 +33,7 @@
       "test/**/*.test.js"
     ],
     "failFast": true,
-    "timeout": "4s",
+    "timeout": "2m",
     "require": [
       "babel-register"
     ],

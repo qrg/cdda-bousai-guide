@@ -105,11 +105,18 @@ const items = (() => {
       return inherit(baseItem, item, items);
     })
     .map(item => {
-      const t = translations.find(t => t.msgid === item.name);
-      const words = t ? t.msgstr : [];
-      return {...item, translations: words};
+      item.translation = {};
+      Object.keys(item).forEach(key => {
+        if (typeof item[key] !== 'string') return;
+        const translated = translations.find(t => item[key] === t.msgid);
+        if (!translated) return;
+        item.translation[key] = translated.msgstr[0];
+      });
+      return item;
     });
 
 })();
+
+fs.writeFileSync(`${ROOT}/tmp/items.json`, JSON.stringify(items, null, 2), 'utf8');
 
 export default items;
