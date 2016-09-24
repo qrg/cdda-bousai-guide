@@ -1,4 +1,5 @@
 {
-  "mo": "./data/0.C-5459/lang/mo/ja/LC_MESSAGES/cataclysm-dda.mo",
-  "json_dir": "./data/0.C-5459/data/json"
+  "lang": "ja",
+  "mo_dir": "/Users/qurage/workspace/git/github.com/qrg/cdda-translator/data/0.C-5583/lang/mo",
+  "json_dir": "/Users/qurage/workspace/git/github.com/qrg/cdda-translator/data/0.C-5583/data/json"
 }
