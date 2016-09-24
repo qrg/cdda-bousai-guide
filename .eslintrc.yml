@@ -5,7 +5,7 @@ env:
 extends:
   - eslint:recommended
 parserOptions:
-  ecmaVersion: 7
+  ecmaVersion: 2017
   ecmaFeatures:
     experimentalObjectRestSpread: true
   sourceType: module
@@ -22,9 +22,29 @@ rules:
   semi:
     - error
     - always
+  eol-last:
+    - error
+  no-trailing-spaces:
+    - error
+  no-multi-spaces:
+    - error
+  template-curly-spacing:
+    - error
+  sort-keys:
+    - error
+    - asc
+    -
+      natural: true
+
   no-console:
     - off
   no-var:
     - error
   prefer-const:
     - error
+  prefer-rest-params:
+    - warn
+  prefer-spread:
+    - warn
+  prefer-template:
+    - warn
