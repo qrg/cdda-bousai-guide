@@ -4,14 +4,7 @@ import fs from 'fs';
 import glob from 'glob';
 import translations from './translations';
 import {ROOT} from './config-path';
-
-const IGNORE_ITEM_TYPE = ['item_group', 'ammunition_type', 'MIGRATION'];
-const IGNORE_CONDITIONS = [
-  (item) => IGNORE_ITEM_TYPE.every(itemType => itemType !== item.type)
-];
-
-const {json_dir} = JSON.parse(fs.readFileSync(`${ROOT}/config.json`));
-const jsonPaths = glob.sync(`${json_dir}/items/**/*.json`);
+import {isString} from './lib/string';
 
 export function findById(id, items) {
   return items.find(v => v.id === id);
@@ -91,9 +84,17 @@ export function inherit(base, sub, items) {
   return result;
 }
 
-const items = (() => {
+const CACHE_PATH = `${ROOT}/cache/items.json`;
 
-  return jsonPaths
+const build = () => {
+  const {json_dir} = JSON.parse(fs.readFileSync(`${ROOT}/config.json`));
+  const jsonPaths = glob.sync(`${json_dir}/items/**/*.json`);
+  const IGNORE_ITEM_TYPE = ['item_group', 'ammunition_type', 'MIGRATION'];
+  const IGNORE_CONDITIONS = [
+    (item) => IGNORE_ITEM_TYPE.every(itemType => itemType !== item.type)
+  ];
+
+  const items = jsonPaths
     .map(file => JSON.parse(fs.readFileSync(file, 'utf8')))
     .reduce((contents, content) => [...contents, ...content])
     .filter(item => IGNORE_CONDITIONS.every(cond => cond(item)))
@@ -107,7 +108,7 @@ const items = (() => {
     .map(item => {
       item.translation = {};
       Object.keys(item).forEach(key => {
-        if (typeof item[key] !== 'string') return;
+        if (!isString(item[key])) return;
         const translated = translations.find(t => item[key] === t.msgid);
         if (!translated) return;
         item.translation[key] = translated.msgstr[0];
@@ -115,8 +116,17 @@ const items = (() => {
       return item;
     });
 
-})();
+  fs.writeFile(CACHE_PATH, JSON.stringify(items, null, 2));
+  return items;
+};
 
-fs.writeFileSync(`${ROOT}/tmp/items.json`, JSON.stringify(items, null, 2), 'utf8');
+const items = () => {
+  try {
+    const data = fs.readFileSync(CACHE_PATH, 'utf8');
+    return JSON.parse(data.toString());
+  } catch (e) {
+    return build();
+  }
+};
 
-export default items;
+export default items();
