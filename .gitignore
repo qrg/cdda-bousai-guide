@@ -45,5 +45,3 @@ dist/*
 cache/*
 !.gitkeep
 
-# lang
-po
