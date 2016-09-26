@@ -84,37 +84,45 @@ export function inherit(base, sub, items) {
   return result;
 }
 
+const filterOutIgnoreItems = item => {
+  const IGNORE_ITEM_TYPE = ['item_group', 'ammunition_type', 'MIGRATION'];
+  const IGNORE_CONDITIONS = [
+    (item) => IGNORE_ITEM_TYPE.every(itemType => itemType !== item.type)
+  ];
+  return IGNORE_CONDITIONS.every(cond => cond(item));
+};
+
+const buildInheritedItems = (item, index, items) => {
+  if (!item.hasOwnProperty('copy-from')) {
+    return item;
+  }
+  const baseItem = findById(item['copy-from'], items);
+  return inherit(baseItem, item, items);
+};
+
+const mergeTranslations = item => {
+  item.translation = {};
+  Object.keys(item).forEach(key => {
+    if (!isString(item[key])) return;
+    const translated = translations.find(t => item[key] === t.msgid);
+    if (!translated) return;
+    item.translation[key] = translated.msgstr[0];
+  });
+  return item;
+};
+
 const CACHE_PATH = `${ROOT}/cache/items.json`;
 
 const build = () => {
   const {json_dir} = JSON.parse(fs.readFileSync(`${ROOT}/config.json`));
   const jsonPaths = glob.sync(`${json_dir}/items/**/*.json`);
-  const IGNORE_ITEM_TYPE = ['item_group', 'ammunition_type', 'MIGRATION'];
-  const IGNORE_CONDITIONS = [
-    (item) => IGNORE_ITEM_TYPE.every(itemType => itemType !== item.type)
-  ];
 
   const items = jsonPaths
     .map(file => JSON.parse(fs.readFileSync(file, 'utf8')))
     .reduce((contents, content) => [...contents, ...content])
-    .filter(item => IGNORE_CONDITIONS.every(cond => cond(item)))
-    .map((item, index, items) => {
-      if (!item.hasOwnProperty('copy-from')) {
-        return item;
-      }
-      const baseItem = findById(item['copy-from'], items);
-      return inherit(baseItem, item, items);
-    })
-    .map(item => {
-      item.translation = {};
-      Object.keys(item).forEach(key => {
-        if (!isString(item[key])) return;
-        const translated = translations.find(t => item[key] === t.msgid);
-        if (!translated) return;
-        item.translation[key] = translated.msgstr[0];
-      });
-      return item;
-    });
+    .filter(filterOutIgnoreItems)
+    .map(buildInheritedItems)
+    .map(mergeTranslations);
 
   fs.writeFile(CACHE_PATH, JSON.stringify(items, null, 2));
   return items;
