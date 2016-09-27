@@ -3,24 +3,61 @@
 import fs from 'fs';
 import parser from 'gettext-parser';
 import glob from 'glob';
-import {ROOT} from './config-path';
 
-const translations = (() => {
-  const {lang, mo_dir} = JSON.parse(fs.readFileSync(`${ROOT}/config.json`));
+export default class Translations {
 
-  if (lang === '') return [];
+  constructor(config) {
+    this.config = config;
+  }
 
-  const moPaths = glob.sync(`${mo_dir}/${lang}/**/*.mo`);
+  async initialize() {
+    this._translations = await this.parse();
+  }
 
-  return moPaths
-    .map(moPath => {
-      const mo = fs.readFileSync(moPath);
-      const parsed = parser.mo.parse(mo).translations[''];
-      return Object.keys(parsed).map(key => parsed[key]);
-    })
-    .reduce((values, value) => {
-      return [...values, ...value];
-    }, []);
-})();
+  getAll() {
+    return this._translations;
+  }
 
-export default translations;
+  async parse() {
+    if (this.config.lang === '') return [];
+
+    const moContents = await this.read();
+
+    console.log('Parsing mo files...');
+
+    return moContents
+      .map(mo => {
+        const parsed = parser.mo.parse(mo).translations[''];
+        return Object.keys(parsed).map(key => parsed[key]);
+      })
+      .reduce((values, value) => {
+        return [...values, ...value];
+      }, []);
+  }
+
+  async read() {
+    const {lang, moDir} = this.config;
+    const pattern = `${moDir}/${lang}/**/*.mo`;
+
+    console.log(`Reading mo files from ${pattern}`);
+
+    const moPaths = await new Promise((done, reject) => {
+      glob(pattern, (err, files) => {
+        if (err) return reject(err);
+        return done(files);
+      });
+    });
+
+    const readFiles = moPaths.map(file => {
+      return new Promise((done, reject) => {
+        fs.readFile(file, (err, data) => {
+          if (err) return reject(err);
+          return done(data);
+        });
+      });
+    });
+
+    return await Promise.all(readFiles);
+  }
+
+}

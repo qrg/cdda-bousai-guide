@@ -2,9 +2,10 @@
 
 import fs from 'fs';
 import glob from 'glob';
-import translations from './translations';
-import {ROOT} from './config-path';
+import {CACHE_PATH} from './config-path';
 import {isString} from './lib/string';
+
+const CACHE_FILE = `${CACHE_PATH}/items.json`;
 
 export function findById(id, items) {
   return items.find(v => v.id === id);
@@ -100,41 +101,108 @@ const buildInheritedItems = (item, index, items) => {
   return inherit(baseItem, item, items);
 };
 
-const mergeTranslations = item => {
-  item.translation = {};
-  Object.keys(item).forEach(key => {
-    if (!isString(item[key])) return;
-    const translated = translations.find(t => item[key] === t.msgid);
-    if (!translated) return;
-    item.translation[key] = translated.msgstr[0];
-  });
-  return item;
-};
+export default class Items {
 
-const CACHE_PATH = `${ROOT}/cache/items.json`;
-
-const build = () => {
-  const {json_dir} = JSON.parse(fs.readFileSync(`${ROOT}/config.json`));
-  const jsonPaths = glob.sync(`${json_dir}/items/**/*.json`);
-
-  const items = jsonPaths
-    .map(file => JSON.parse(fs.readFileSync(file, 'utf8')))
-    .reduce((contents, content) => [...contents, ...content])
-    .filter(filterOutIgnoreItems)
-    .map(buildInheritedItems)
-    .map(mergeTranslations);
-
-  fs.writeFile(CACHE_PATH, JSON.stringify(items, null, 2));
-  return items;
-};
-
-const items = () => {
-  try {
-    const data = fs.readFileSync(CACHE_PATH, 'utf8');
-    return JSON.parse(data.toString());
-  } catch (e) {
-    return build();
+  constructor(config) {
+    this.config = config;
   }
-};
 
-export default items();
+  async initialize(translations) {
+    this._translations = translations;
+    this._items = await this.read();
+  }
+
+  getAll() {
+    return this._items;
+  }
+
+  async read() {
+    let items;
+    try {
+      items = await this.readCache();
+      return items;
+    } catch (e) {
+      console.log('Items cache file was not exist.');
+      const itemsData = await this.readJsonFiles();
+      items = this.build(itemsData);
+      console.log('Successfully built items.');
+      this.saveCache(items);
+      return items;
+    }
+  }
+
+  async readCache() {
+    console.log('Loading items cache...');
+    return await new Promise((done, reject) => {
+      fs.readFile(CACHE_FILE, 'utf8', (err, data) => {
+        if (err) return reject(err);
+        return done(JSON.parse(data));
+      });
+    });
+  }
+
+  async readJsonFiles() {
+    const pattern = `${this.config.jsonDir}/items/**/*.json`;
+    const jsonPaths = await new Promise((done, reject) => {
+      glob(pattern, (err, files) => {
+        if (err) return reject(err);
+        return done(files);
+      });
+    });
+
+    console.log(`Reading item json files from ${pattern}`);
+    const readFiles = jsonPaths.map(file => {
+      return new Promise((done, reject) => {
+        fs.readFile(file, 'utf8', (err, data) => {
+          if (err) return reject(err);
+          const parsed = JSON.parse(data.toString());
+          return done(parsed);
+        });
+      });
+    });
+
+    return await Promise.all(readFiles);
+  }
+
+  build(itemsData) {
+    console.log('Building items data...');
+    return itemsData
+      .reduce((contents, content) => [...contents, ...content])
+      .filter(filterOutIgnoreItems)
+      .map(buildInheritedItems)
+      .map(this._mergeTranslations, this);
+  }
+
+  async saveCache(items) {
+    console.log(`Saving items cache file ${CACHE_FILE}`);
+    return await new Promise((done, reject) => {
+      const data = JSON.stringify(items, null, 2);
+      fs.writeFile(CACHE_FILE, data, 'utf8', (err) => {
+        if (err) reject(err);
+        return done();
+      });
+    });
+  }
+
+  async deleteCache() {
+    return await new Promise((done, reject) => {
+      fs.unlink(CACHE_FILE, (err) => {
+        if (err) return reject(err);
+        return done();
+      });
+    });
+  }
+
+  _mergeTranslations(item) {
+    item.translation = {};
+    Object.keys(item).forEach(key => {
+      if (!isString(item[key])) return;
+      const translated = this._translations.find(t => item[key] === t.msgid);
+      if (!translated) return;
+      item.translation[key] = translated.msgstr[0];
+    });
+    return item;
+  }
+
+}
+
