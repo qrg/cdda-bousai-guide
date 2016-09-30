@@ -30,12 +30,6 @@ rules:
     - error
   template-curly-spacing:
     - error
-  sort-keys:
-    - error
-    - asc
-    -
-      natural: true
-
   no-console:
     - off
   no-var:
