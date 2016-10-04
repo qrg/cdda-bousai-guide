@@ -42,6 +42,7 @@ jspm_packages
 
 # dist
 dist/*
-cache/*
+package/*
+release/*
 !.gitkeep
 

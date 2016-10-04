@@ -1,0 +1,23 @@
+<!doctype html>
+<html class="no-js" lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>Sample</title>
+  <meta name="description" content="">
+  <!--<link rel="stylesheet" href="css/main.css">-->
+</head>
+<body>
+
+  <main id="main"></main>
+
+  <script>
+    {
+      const script = document.createElement('script');
+      const PORT = process.env.PORT || 8080;
+      script.src = (process.env.HOT) ? `http://localhost:${PORT}/dist/bundle.js` : 'bundle.js';
+      document.write(script.outerHTML);
+    }
+  </script>
+</body>
+
+</html>

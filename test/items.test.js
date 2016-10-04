@@ -1,7 +1,7 @@
 'use strict';
 
 import test from 'ava';
-import {inherit} from '../src/items';
+import {inherit} from '../src/main/items';
 
 const origin = {
   'ammo_type': 'shot',

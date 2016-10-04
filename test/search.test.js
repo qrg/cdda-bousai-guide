@@ -1,7 +1,7 @@
 'use strict';
 
 import test from 'ava';
-import search from '../src/search';
+import search from '../src/main/search';
 
 const items = [
   {
