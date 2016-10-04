@@ -1,8 +1,9 @@
 {
-  "name": "cdda-searcher-app",
+  "name": "cdda-bousai-guide",
+  "productName": "Bousai Guide",
   "version": "0.0.1",
-  "description": "",
   "main": "index.js",
+  "description": "Cataclysm DDA Item viewer app",
   "scripts": {
     "build": "babel src -d dist",
     "test": "ava --verbose && npm run lint",
@@ -11,6 +12,10 @@
     "clean-install": "rm -rf ./node_modules && npm cache clean && npm cache ls && rm -rf ~/.npm && npm install"
   },
   "author": "qrg",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qrg/cdda-bousai-guide"
+  },
   "license": "MIT",
   "devDependencies": {
     "ava": "^0.16.0",
