@@ -1,0 +1,27 @@
+@charset "utf-8"
+
+@import "../styles/variables"
+
+.SearchBar
+  input
+    width: 100%
+    background-color: $body-background
+    color: #eee
+    border: none
+    border-radius: 0
+    padding: 28px 16px 24px
+    font-size: 18px
+    font-weight: bold
+    line-height: 2
+    box-shadow: none
+    transition: background-color .1s ease, border-color .4s ease
+    border-bottom: 4px solid lighten($body-background, 8%)
+
+    &:hover
+      border-bottom-color: lighten($body-background, 8%)
+    &:focus
+      border-bottom-color: transparent
+
+    &:focus
+      background-color: lighten($body-background, 4%)
+

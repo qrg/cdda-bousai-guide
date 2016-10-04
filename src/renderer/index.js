@@ -2,9 +2,9 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Sample from './sample-component';
+import SearchBar from './components/search-bar';
 
 ReactDOM.render(
-  <Sample initialCount={0} />,
+  <SearchBar />,
   document.getElementById('main')
 );
