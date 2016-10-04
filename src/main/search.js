@@ -1,6 +1,6 @@
 'use strict';
 
-import {includes} from './lib/string';
+import {includes} from '../lib/string';
 
 export default function (term, items) {
 

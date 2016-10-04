@@ -3,7 +3,7 @@
 import fs from 'fs';
 import glob from 'glob';
 import {CACHE_PATH} from './config-path';
-import {isString} from './lib/string';
+import {isString} from '../lib/string';
 
 const CACHE_FILE = `${CACHE_PATH}/items.json`;
 
