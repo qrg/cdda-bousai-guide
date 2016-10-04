@@ -8,7 +8,7 @@
     "build": "babel src -d dist",
     "test": "ava --verbose && npm run lint",
     "test:watch": "ava --watch --verbose",
-    "lint": "eslint -c .eslintrc.yml \"src/**/*.js\" \"test/**/*.js\"",
+    "lint": "eslint --config .eslintrc.yml \"src/**/*.js\" \"test/**/*.js\" --fix",
     "clean-install": "rm -rf ./node_modules && npm cache clean && npm cache ls && rm -rf ~/.npm && npm install"
   },
   "author": "qrg",
