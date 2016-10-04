@@ -16,6 +16,14 @@ export default {
     path: `./${DIST_DIR}/main`,
   },
 
+  module: {
+    ...baseConfig.module,
+    noParse: [
+      /devtron/,
+      /electron-devtools-installer/
+    ]
+  },
+
   plugins: [
     // Minify the output
     new webpack.optimize.UglifyJsPlugin({
