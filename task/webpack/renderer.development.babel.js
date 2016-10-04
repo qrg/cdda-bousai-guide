@@ -12,19 +12,28 @@ export default {
   entry: [
     `webpack-dev-server/client?http://localhost:${PORT}`,
     'webpack/hot/dev-server',
-    `./${SRC_DIR}/renderer/index`
+    `./${SRC_DIR}/renderer/index.js`,
+    `./${SRC_DIR}/renderer/styles/index.js`
   ],
 
   output: {
     ...baseConfig.output,
     path: `./${DIST_DIR}/renderer`,
-    publicPath: `/${DIST_DIR}`
+    publicPath: `http://localhost:${PORT}/dist`
   },
 
   module: {
     ...baseConfig.module,
     loaders: [
-      ...baseConfig.module.loaders
+      ...baseConfig.module.loaders,
+      {
+        test: /\.css$/,
+        loader: 'style-loader!css-loader',
+      },
+      {
+        test: /\.(sass|scss)$/,
+        loader: 'style-loader!css-loader!sass-loader',
+      }
     ]
   },
 

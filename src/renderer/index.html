@@ -4,7 +4,6 @@
   <meta charset="utf-8">
   <title>Sample</title>
   <meta name="description" content="">
-  <!--<link rel="stylesheet" href="css/main.css">-->
 </head>
 <body>
 
@@ -12,12 +11,19 @@
 
   <script>
     {
-      const script = document.createElement('script');
       const PORT = process.env.PORT || 8080;
+      const link = document.createElement('link');
+      const script = document.createElement('script');
+
+      link.rel = 'stylesheet';
+      link.href = (process.env.HOT) ? '' : 'style.css';
       script.src = (process.env.HOT) ? `http://localhost:${PORT}/dist/bundle.js` : 'bundle.js';
-      document.write(script.outerHTML);
+
+      document.body.appendChild(link);
+      document.body.appendChild(script);
     }
   </script>
+
 </body>
 
 </html>
