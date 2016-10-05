@@ -1,39 +1,78 @@
 'use strict';
 
 import {app, BrowserWindow} from 'electron';
+import debounce from 'debounce';
+
+import Config from './config';
 
 let window;
 
-console.log('main file');
+const INDEX_HTML = `file://${__dirname}/../renderer/index.html`;
+const INITIAL_BG_COLOR = '#323b4b'; // display until finishing apply stylesheet
+const config = new Config();
 
-app.on('ready', () => {
-  window = new BrowserWindow({
-    width: 1280,
-    height: 960
+const initialize = async () => {
+  await config.initialize();
+};
+
+const onWindowMove = debounce(async () => {
+  const [x, y] = window.getPosition();
+  config.set({
+    window_x: x,
+    window_y: y
   });
-  window.loadURL(`file://${__dirname}/../renderer/index.html`);
+  console.log('window move', x, y);
+  await config.store();
+}, 300);
+
+const onWindowResize = debounce(async () => {
+  const [width, height] = window.getSize();
+  config.set({
+    window_width: width,
+    window_height: height
+  });
+  console.log('window resize', width, height);
+  await config.store();
+}, 300);
+
+const onWindowClose = () => window = null;
+
+const onReady = async () => {
+  await initialize();
+
+  window = new BrowserWindow({
+    x: config.get('window_x'),
+    y: config.get('window_y'),
+    width: config.get('window_width'),
+    height: config.get('window_height'),
+    backgroundColor: INITIAL_BG_COLOR
+  });
+
+  window.on('move', onWindowMove);
+  window.on('resize', onWindowResize);
+  window.on('closed', onWindowClose);
+
+  window.loadURL(INDEX_HTML);
 
   if (process.env.NODE_ENV === 'development') {
-    const installExtension = require('electron-devtools-installer').default;
-    const {REACT_DEVELOPER_TOOLS, REACT_PERF} = require('electron-devtools-installer');
-
-    require('devtron').install();
-
-    Promise.all([
-      installExtension(REACT_DEVELOPER_TOOLS),
-      installExtension(REACT_PERF)
-    ]).then(name => console.log(`Added Extension: ${name}`))
-      .then(() => window.openDevTools())
-      .catch(err => console.error('An error occurred: ', err));
+    (async () => {
+      await require('./debug')();
+    })();
   }
 
-  window.on('closed', () => {
-    window = null;
-  });
-});
+  app.focus();
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
+  // TODO: DELETE
+  // =====================================================
+  window.openDevTools();
+  // =====================================================
+
+};
+
+const onWindowAllClosed = () => {
+  console.log('window all closed.');
+  app.quit();
+};
+
+app.on('ready', onReady);
+app.on('window-all-closed', onWindowAllClosed);
