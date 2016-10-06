@@ -15,8 +15,7 @@ export default {
 
   output: {
     ...baseConfig.output,
-    path: `./${DIST_DIR}/renderer`,
-    publicPath: `/${DIST_DIR}`
+    path: `./${DIST_DIR}/renderer`
   },
 
   module: {

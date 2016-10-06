@@ -5,21 +5,26 @@
   "description": "Cataclysm DDA Item viewer app",
   "main": "dist/main/bundle.js",
   "scripts": {
-    "start": "npm-run-all bundle start:electron",
-    "start:dev": "npm-run-all clean bundle:resources --parallel start:dev-server start:electron:dev",
-    "start:electron": "cross-env NODE_ENV=production electron dist/main/bundle.js",
-    "start:electron:dev": "cross-env HOT=1 NODE_ENV=development electron --require babel-register ./src/main/index.js",
-    "start:dev-server": "cross-env HOT=1 NODE_ENV=development webpack-dev-server --config ./task/webpack/renderer.development.babel.js --colors",
-    "bundle": "npm-run-all clean --parallel bundle:*",
-    "bundle:main": "cross-env NODE_ENV=production webpack --optimize-minimize --config ./task/webpack/main.production.babel.js",
-    "bundle:renderer": "cross-env NODE_ENV=production webpack --optimize-minimize --config ./task/webpack/renderer.production.babel.js --colors",
-    "bundle:resources": "babel-node ./task/copy.js",
-    "clean": "babel-node ./task/clean.js",
+    "start": "npm-run-all bundle electron",
+    "start:dev": "npm-run-all bundle:dev electron:dev",
+    "start:hot": "npm-run-all clean bundle:resources --parallel hot-server electron:hot",
     "package": "npm run bundle && babel-node ./task/package.js",
     "test": "ava --verbose && npm run lint",
     "test:watch": "ava --watch --verbose",
     "lint": "eslint --config .eslintrc.yml \"src/**/*.js\" \"test/**/*.js\" --fix",
-    "clean-install": "rm -rf ./node_modules && npm cache clean && npm cache ls && rm -rf ~/.npm && npm install"
+    "clean-install": "rm -rf ./node_modules && npm cache clean && npm cache ls && rm -rf ~/.npm && npm install",
+    "electron": "cross-env NODE_ENV=production electron dist/main/bundle.js",
+    "electron:dev": "cross-env NODE_ENV=development electron dist/main/bundle.js",
+    "electron:hot": "cross-env HOT=1 NODE_ENV=development electron --require babel-register ./src/main/index.js",
+    "hot-server": "cross-env HOT=1 NODE_ENV=development webpack-dev-server --config ./task/webpack/renderer.hot.babel.js",
+    "bundle": "npm-run-all clean --parallel bundle:main bundle:renderer bundle:resources",
+    "bundle:dev": "npm-run-all clean --parallel bundle:main:dev bundle:renderer:dev bundle:resources",
+    "bundle:main": "cross-env NODE_ENV=production webpack --optimize-minimize --config ./task/webpack/main.babel.js",
+    "bundle:main:dev": "cross-env NODE_ENV=development webpack --config ./task/webpack/main.dev.babel.js",
+    "bundle:renderer": "cross-env NODE_ENV=production webpack --optimize-minimize --config ./task/webpack/renderer.babel.js",
+    "bundle:renderer:dev": "cross-env NODE_ENV=development webpack --config ./task/webpack/renderer.dev.babel.js",
+    "bundle:resources": "babel-node ./task/copy.js",
+    "clean": "babel-node ./task/clean.js"
   },
   "author": "qrg",
   "repository": {
@@ -51,6 +56,7 @@
     "node-sass": "^3.10.1",
     "npm-run-all": "^3.1.0",
     "sass-loader": "^4.0.2",
+    "source-map-loader": "^0.1.5",
     "style-loader": "^0.13.1",
     "webpack": "^1.13.2",
     "webpack-dev-server": "^1.16.1",
@@ -66,6 +72,7 @@
     "react-dom": "^15.3.2"
   },
   "babel": {
+    "sourceMaps": "inline",
     "presets": [
       "es2015",
       "es2016",

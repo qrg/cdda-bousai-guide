@@ -16,11 +16,22 @@ export default {
   module: {
     loaders: [
       {
-        exclude: /node_modules/,
-        loader: 'babel-loader',
-        test: /\.js$/
+        test: /\.js$/,
+        loader: 'source-map-loader!babel-loader',
+        exclude: /node_modules/
       }
     ]
+  },
+
+  resolve: {
+    extensions: ['', '.js', '.jsx', '.json']
+  },
+
+  stats: {
+    colors: true,
+    reasons: true,
+    hash: false,
+    modulesSort: 'name'
   },
 
   plugins: []

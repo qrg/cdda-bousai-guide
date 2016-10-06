@@ -56,7 +56,7 @@ export default {
   target: 'electron-renderer',
 
   debug: true,
-  devtool: 'cheap-module-eval-source-map',
+  devtool: 'inline-source-map',
 
   devServer: {
     port: PORT,
