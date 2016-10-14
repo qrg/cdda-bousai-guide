@@ -2,6 +2,10 @@
 
 import {BrowserWindow} from 'electron';
 import debounce from 'lodash.debounce';
+import {
+  productName as PRODUCT_NAME,
+  version as VERSION
+} from '../../package.json';
 
 const INDEX_HTML = `file://${__dirname}/../renderer/index.html`;
 const INITIAL_BG_COLOR = '#323b4b'; // display until finishing apply stylesheet
@@ -16,7 +20,8 @@ export default class PrimaryWindow {
       y: this.config.get('window_y'),
       width: this.config.get('window_width'),
       height: this.config.get('window_height'),
-      backgroundColor: INITIAL_BG_COLOR
+      backgroundColor: INITIAL_BG_COLOR,
+      title: `${PRODUCT_NAME} ${VERSION}`
     });
 
     this.window.once('ready-to-show', () => this.onReadyToShow());
