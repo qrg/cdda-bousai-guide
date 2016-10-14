@@ -72,7 +72,7 @@
     "debounce": "^1.0.0",
     "fs-extra": "^0.30.0",
     "gettext-parser": "^1.2.0",
-    "glob": "^7.1.0",
+    "glob": "^7.1.1",
     "lodash.debounce": "^4.0.8",
     "lodash.throttle": "^4.1.1",
     "os-locale": "^1.4.0",
