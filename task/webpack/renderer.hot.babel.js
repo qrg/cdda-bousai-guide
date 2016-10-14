@@ -28,11 +28,11 @@ export default {
       ...baseConfig.module.loaders,
       {
         test: /\.css$/,
-        loader: 'style-loader!css-loader',
+        loader: 'style-loader!css-loader'
       },
       {
         test: /\.(sass|scss)$/,
-        loader: 'style-loader!css-loader!sass-loader',
+        loader: 'style-loader!css-loader!sass-loader'
       }
     ]
   },

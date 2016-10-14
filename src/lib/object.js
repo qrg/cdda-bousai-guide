@@ -12,3 +12,14 @@ export function is(type, obj) {
 export function isPlainObject(obj) {
   return is('Object', obj);
 }
+
+export function filterObject(obj, condition) {
+  return Object.keys(obj)
+    .filter((key, index, keys) => {
+      return condition(obj, key, index, keys);
+    })
+    .reduce((newObj, key) => {
+      newObj[key] = obj[key];
+      return newObj;
+    }, {});
+}

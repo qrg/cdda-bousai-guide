@@ -2,9 +2,10 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import SearchBar from './components/search-bar';
+import App from './containers/app';
 
 ReactDOM.render(
-  <SearchBar />,
-  document.getElementById('main')
+  <App />,
+  document.getElementById('app')
 );
+

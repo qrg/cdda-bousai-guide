@@ -1,7 +1,7 @@
 'use strict';
 
 import test from 'ava';
-import {getType, is, isPlainObject} from '../../src/lib/object';
+import {getType, is, isPlainObject, filterObject} from '../../src/lib/object';
 
 test('getType(arg) returns string as class name of a argument.', t => {
   t.is(getType('string'), 'String');
@@ -43,4 +43,18 @@ test('isPlainObject(arg) returns boolean as whether `arg` is associative array',
   t.false(isPlainObject(false));
   t.false(isPlainObject(undefined));
   t.false(isPlainObject(NaN));
+});
+
+test('filterObject(obj, condition) returns filtered object depends on condition', t => {
+  const resultFilterObject = filterObject({
+    a: 'a value',
+    b: 1,
+    c: 'c value',
+    d: null
+  }, (obj, key) => {
+    return typeof obj[key] === 'number';
+  });
+
+  t.true(isPlainObject(resultFilterObject));
+  t.is(Object.keys(resultFilterObject).length, 1);
 });

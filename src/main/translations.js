@@ -1,17 +1,22 @@
 'use strict';
 
-import fs from 'fs';
+import {readFile} from 'fs';
 import parser from 'gettext-parser';
 import glob from 'glob';
 
 export default class Translations {
 
-  constructor(config) {
-    this.config = config;
+  constructor({lang, moDir}) {
+    this.lang = lang;
+    this.moDir = moDir;
   }
 
   async initialize() {
-    this._translations = await this.parse();
+    try {
+      this._translations = await this.parse();
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   getAll() {
@@ -19,45 +24,58 @@ export default class Translations {
   }
 
   async parse() {
-    if (this.config.lang === '') return [];
+    const lang = this.lang;
+    if (lang === 'en') {
+      return [];
+    }
 
-    const moContents = await this.read();
+    try {
+      const moContents = await this.read();
+      console.log('Parsing mo files...');
 
-    console.log('Parsing mo files...');
-
-    return moContents
-      .map(mo => {
-        const parsed = parser.mo.parse(mo).translations[''];
-        return Object.keys(parsed).map(key => parsed[key]);
-      })
-      .reduce((values, value) => {
-        return [...values, ...value];
-      }, []);
+      return moContents
+        .map(mo => {
+          const parsed = parser.mo.parse(mo).translations[''];
+          return Object.keys(parsed).map(key => parsed[key]);
+        })
+        .reduce((values, value) => [...values, ...value], []);
+    } catch (e) {
+      return console.error(e);
+    }
   }
 
   async read() {
-    const {lang, moDir} = this.config;
-    const pattern = `${moDir}/${lang}/**/*.mo`;
+    const pattern = `${this.moDir}/${this.lang}/**/*.mo`;
 
     console.log(`Reading mo files from ${pattern}`);
 
     const moPaths = await new Promise((done, reject) => {
       glob(pattern, (err, files) => {
-        if (err) return reject(err);
-        return done(files);
+        if (err) reject(err);
+        done(files);
       });
+    }).catch(e => {
+      return console.error(e);
     });
 
     const readFiles = moPaths.map(file => {
       return new Promise((done, reject) => {
-        fs.readFile(file, (err, data) => {
+        readFile(file, (err, data) => {
           if (err) return reject(err);
           return done(data);
         });
+      }).catch(e => {
+        return console.error(e);
       });
     });
 
-    return await Promise.all(readFiles);
+    return Promise.all(readFiles);
+  }
+
+  findById(id) {
+    return this._translations.find(t => {
+      return id === t.msgid;
+    });
   }
 
 }

@@ -7,7 +7,7 @@ import {SRC_PATH, DIST_PATH} from './path-config';
 
 const RESOURCES = [
   path.join(SRC_PATH, 'icon', '**', '*.+(icns|ico|png)'),
-  path.join(SRC_PATH, 'renderer', '**', '*.+(html|css|jpg|png|gif|svg|woff)'),
+  path.join(SRC_PATH, 'renderer', '**', '*.+(html|css|jpg|png|gif|svg|woff|woff2)'),
   path.join(SRC_PATH, 'config.json')
 ];
 

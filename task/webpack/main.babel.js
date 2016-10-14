@@ -21,6 +21,13 @@ export default {
     noParse: [
       /devtron/,
       /electron-devtools-installer/
+    ],
+    loaders: [
+      ...baseConfig.module.loaders,
+      {
+        test: /JSONStream\/index\.js/,
+        loader: 'shebang!source-map-loader!babel-loader'
+      }
     ]
   },
 

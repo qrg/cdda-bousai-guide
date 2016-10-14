@@ -1,7 +1,7 @@
 'use strict';
 
 import test from 'ava';
-import {inherit} from '../src/main/items';
+import {inheritItems} from '../src/main/inherit-items';
 
 const origin = {
   'ammo_type': 'shot',
@@ -51,39 +51,39 @@ const sub = {
 
 const items = [origin, base, sub];
 
-test('inherit() should returns object that sub override base', (t) => {
-  const result = inherit(base, sub, items);
+test('inheritItems() should returns object that sub override base', (t) => {
+  const result = inheritItems(base, sub, items);
   t.true(['id', 'name', 'name_plural'].every(k => result[k] === sub[k]));
 });
 
-test('inherit() should returns object has keys which sub does not have but base has', (t) => {
-  const result = inherit(base, sub, items);
-  const inheritedBase = inherit(origin, base, items);
+test('inheritItems() should returns object has keys which sub does not have but base has', (t) => {
+  const result = inheritItems(base, sub, items);
+  const inheritedBase = inheritItems(origin, base, items);
   t.true([
     'description', 'weight', 'volume', 'material', 'symbol', 'color', 'count',
     'stack_size', 'ammo_type', 'casing', 'range', 'recoil', 'loudness', 'pierce',
   ].every(key => result[key] === inheritedBase[key]));
 });
 
-test('inherit() should returns object that numeric values are specified `relative` to base', (t) => {
-  const result = inherit(origin, base, items);
+test('inheritItems() should returns object that numeric values are specified `relative` to base', (t) => {
+  const result = inheritItems(origin, base, items);
   t.is(result.range, 12);
   t.is(result.pierce, 8);
 });
 
-test('inherit() should returns object that numeric values are specified `proportional` to base', (t) => {
-  const result = inherit(base, sub, items);
+test('inheritItems() should returns object that numeric values are specified `proportional` to base', (t) => {
+  const result = inheritItems(base, sub, items);
   t.is(result.price, 3150);
   t.is(result.damage, 28);
   t.is(result.dispersion, 0);
 });
 
-test('inherit() should returns object which has added values via `extend` key', (t) => {
-  const result = inherit(base, sub, items);
+test('inheritItems() should returns object which has added values via `extend` key', (t) => {
+  const result = inheritItems(base, sub, items);
   t.deepEqual(result.effects, ['COOKOFF', 'RECYCLED']);
 });
 
-test('inherit() should returns object which has deleted values via `delete` key', (t) => {
-  const result = inherit(origin, base, items);
+test('inheritItems() should returns object which has deleted values via `delete` key', (t) => {
+  const result = inheritItems(origin, base, items);
   t.true(!result.effects.includes('SHOT'));
 });

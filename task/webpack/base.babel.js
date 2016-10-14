@@ -19,12 +19,23 @@ export default {
         test: /\.js$/,
         loader: 'source-map-loader!babel-loader',
         exclude: /node_modules/
+      },
+
+      {
+        test: /\.(eot|svg|ttf|woff|woff2)(\?v=\d+\.\d+\.\d+)?$/,
+        loader: 'url?mimetype=application/font-woff'
+      },
+
+      // https://github.com/lynndylanhurley/redux-auth/issues/26
+      {
+        test: /\.json$/,
+        loader: 'json-loader'
       }
     ]
   },
 
   resolve: {
-    extensions: ['', '.js', '.jsx', '.json']
+    extensions: ['', '.js', '.jsx']
   },
 
   stats: {
