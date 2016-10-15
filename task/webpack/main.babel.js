@@ -19,6 +19,7 @@ export default {
   module: {
     ...baseConfig.module,
     noParse: [
+      /install-devtools\.js/,
       /devtron/,
       /electron-devtools-installer/
     ],

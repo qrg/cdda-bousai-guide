@@ -31,9 +31,7 @@ class Main {
     this.primaryWindow = new PrimaryWindow(this.config);
 
     if (process.env.NODE_ENV === 'development') {
-      (async () => {
-        await require('./debug')();
-      })();
+      require('./install-devtools')();
     }
 
     // TODO: DELETE
