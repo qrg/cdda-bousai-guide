@@ -6,6 +6,7 @@ import {join} from 'path';
 import {ipcMain as ipc} from 'electron';
 import {createReadStream, readJson, writeJson, unlink} from 'fs-extra';
 import glob from 'glob';
+import uuid from 'uuid';
 
 import Translations from './translations';
 import {buildInheritedItems} from './inherit-items';
@@ -180,6 +181,8 @@ export default class Items extends EventEmitter {
         return (values) => {
           return new Promise((done) => {
             this.mergeTranslations(item, translations).then(value => {
+              value.uuid = uuid.v4();
+
               const result = [...values, value];
 
               this.emit('init-progress', null, {
