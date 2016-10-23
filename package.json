@@ -75,6 +75,7 @@
     "glob": "^7.1.1",
     "lodash.debounce": "^4.0.8",
     "lodash.throttle": "^4.1.1",
+    "natural": "^0.4.0",
     "os-locale": "^1.4.0",
     "react": "^15.3.2",
     "react-addons-css-transition-group": "^15.3.2",
