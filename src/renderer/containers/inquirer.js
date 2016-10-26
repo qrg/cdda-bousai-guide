@@ -39,7 +39,7 @@ export default class Inquirer extends React.Component {
       ['lang', '']
     ]);
 
-    ipc.on('main:reply-items-ready', (...args) => this.onReplyItemsReady(...args));
+    ipc.on('main:reply-config-status', (...args) => this.onReplyConfigStatus(...args));
     ipc.on('main:items-init-progress',
       throttle((...args) => {
         return this.onItemsInitProgress(...args);
@@ -73,7 +73,7 @@ export default class Inquirer extends React.Component {
 
   componentDidMount() {
     wait(1000).then(() => {
-      ipc.send('main:request-items-ready');
+      ipc.send('main:request-config-status');
     });
   }
 
@@ -153,13 +153,13 @@ export default class Inquirer extends React.Component {
     console.log(file, data);
   }
 
-  onReplyItemsReady(event, err, {isReady}) {
-    console.log('onReplyItemsReady', isReady);
+  onReplyConfigStatus(event, err, {isFulfilled}) {
+    console.log('onReplyConfigStatus', isFulfilled);
     if (err) {
       console.error(err);
       return;
     }
-    if (!isReady) {
+    if (!isFulfilled) {
       this.setState({step: 2});
       return;
     }

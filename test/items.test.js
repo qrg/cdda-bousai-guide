@@ -1,7 +1,7 @@
 'use strict';
 
 import test from 'ava';
-import {inheritItems} from '../src/main/inherit-items';
+import {inheritItems} from '../src/lib/inherit-items';
 
 const origin = {
   'ammo_type': 'shot',
@@ -56,7 +56,7 @@ test('inheritItems() should returns object that sub override base', (t) => {
   t.true(['id', 'name', 'name_plural'].every(k => result[k] === sub[k]));
 });
 
-test('inheritItems() should returns object has keys which sub does not have but base has', (t) => {
+test('inheritItems() should returns object validate keys which sub does not have but base validate', (t) => {
   const result = inheritItems(base, sub, items);
   const inheritedBase = inheritItems(origin, base, items);
   t.true([
@@ -78,12 +78,12 @@ test('inheritItems() should returns object that numeric values are specified `pr
   t.is(result.dispersion, 0);
 });
 
-test('inheritItems() should returns object which has added values via `extend` key', (t) => {
+test('inheritItems() should returns object which validate added values via `extend` key', (t) => {
   const result = inheritItems(base, sub, items);
   t.deepEqual(result.effects, ['COOKOFF', 'RECYCLED']);
 });
 
-test('inheritItems() should returns object which has deleted values via `delete` key', (t) => {
+test('inheritItems() should returns object which validate deleted values via `delete` key', (t) => {
   const result = inheritItems(origin, base, items);
   t.true(!result.effects.includes('SHOT'));
 });

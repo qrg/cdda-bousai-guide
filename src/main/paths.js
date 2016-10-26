@@ -1,6 +1,6 @@
 'use strict';
 
-import {join, dirname, basename} from 'path';
+import {join, dirname} from 'path';
 import {access, constants} from 'fs';
 import glob from 'glob';
 import {app} from 'electron';

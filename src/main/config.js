@@ -32,6 +32,7 @@ export default class Config extends Store {
 
     DEFAULT_CONFIG.forEach((v, k) => this.set(k, v));
 
+    ipc.on('main:request-config-status', (event) => this.onRequestConfigStatus(event));
     ipc.on('main:request-exe-path-validation', Config.onRequestExePathValidation);
     ipc.on('main:request-lang-list', (...args) => this.onRequestLangList(...args));
     ipc.on('main:request-save-config', (...args) => this.onRequestSaveConfig(...args));
@@ -41,9 +42,10 @@ export default class Config extends Store {
     try {
       await this.load();
       this.emit('initialized');
+
     } catch (e) {
 
-      if (e.code !== 'ENOENT' && e.code !== 'MIGRATE') {
+      if (e.code !== 'ENOENT' && e.code !== 'VERSION_CONFLICT') {
         // TODO notify
         console.error('Config file initializing failed.');
         console.error(e);
@@ -52,6 +54,7 @@ export default class Config extends Store {
 
       // TODO notify
       console.log('Create new config.json as default settings', this.filePath);
+
       try {
         this.save();
         this.emit('initialized');
@@ -109,6 +112,20 @@ export default class Config extends Store {
         data: this.entries()
       });
     }
+  }
+
+  hasMissingConfig() {
+    return ['lang', 'json_dir', 'mo_dir'].some(key => !this.validate(key));
+  }
+
+  onRequestConfigStatus(event) {
+    const channel = 'main:reply-config-status';
+    const {sender} = event;
+    if (this.hasMissingConfig()) {
+      sender.send(channel, null, {isFulfilled: false});
+      return;
+    }
+    sender.send(channel, null, {isFulfilled: true});
   }
 
   static async onRequestExePathValidation(event, exePath) {
