@@ -34,10 +34,10 @@ export default class Inquirer extends React.Component {
       indicatorRate: 0
     };
 
-    this._config = {
-      exe_path: '',
-      lang: ''
-    };
+    this.config = new Map([
+      ['exe_path', ''],
+      ['lang', '']
+    ]);
 
     ipc.on('main:reply-items-ready', (...args) => this.onReplyItemsReady(...args));
     ipc.on('main:items-init-progress',
@@ -118,19 +118,19 @@ export default class Inquirer extends React.Component {
     });
   }
 
-  onReplyExePathValidation(event, err, {isValid, errors, exePath}) {
+  onReplyExePathValidation(event, err, {errMsgs, exePath}) {
     if (err) {
       console.error(err);
       return;
     }
     this.setStateDeep('exePathField', {isBusy: false});
-    if (isValid) {
-      this._config.exe_path = exePath;
+    if (errMsgs.length === 0) {
+      this.config.set('exe_path', exePath);
       this.stepNext();
       return;
     }
-    errors.forEach(err => console.error(err));
-    this.setStateDeep('exePathField', {errors: errors});
+    errMsgs.forEach(err => console.error(err));
+    this.setStateDeep('exePathField', {errors: errMsgs});
   }
 
   onReplyLangList(event, err, {langs, defaultValue}) {
@@ -181,13 +181,12 @@ export default class Inquirer extends React.Component {
 
   onRequestLangList() {
     this.setStateDeep('langField', {isBusy: true});
-    ipc.send('main:request-lang-list', this._config.exe_path);
+    ipc.send('main:request-lang-list', this.config.get('exe_path'));
   }
 
-  onLangSelected(value) {
-    console.log(value);
-    this._config.lang = value;
-    ipc.send('main:request-save-config', this._config);
+  onLangSelected(selected) {
+    this.config.set('lang', selected);
+    ipc.send('main:request-save-config', [...this.config.values()]);
     this.setState({step: 1});
     this.requestItemsInit();
   }

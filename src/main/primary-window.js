@@ -43,22 +43,18 @@ export default class PrimaryWindow {
 
   onMove() {
     const [x, y] = this.window.getPosition();
-    this.config.set({
-      window_x: x,
-      window_y: y
-    });
+    this.config.set('window_x', x);
+    this.config.set('window_y', y);
     console.log('window move', x, y);
-    this.config.store();
+    this.config.save();
   }
 
   onResize() {
     const [width, height] = this.window.getSize();
-    this.config.set({
-      window_width: width,
-      window_height: height
-    });
+    this.config.set('window_width', width);
+    this.config.set('window_height', height);
     console.log('window resize', width, height);
-    this.config.store();
+    this.config.save();
   }
 
 }

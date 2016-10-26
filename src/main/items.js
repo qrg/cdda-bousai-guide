@@ -69,7 +69,7 @@ export default class Items extends EventEmitter {
 
   isRequiredConfig() {
     return ['lang', 'json_dir', 'mo_dir'].some(key => {
-      return !this.config.has(key);
+      return !this.config.validate(key);
     });
   }
 
