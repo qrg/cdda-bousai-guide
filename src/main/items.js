@@ -43,7 +43,7 @@ export default class Items extends EventEmitter {
   onRequestItemsReady(event) {
     const channel = 'main:reply-items-ready';
     const {sender} = event;
-    if (this.isRequiredConfig()) {
+    if (this.hasMissingConfig()) {
       sender.send(channel, null, {isReady: false});
       return;
     }
@@ -67,7 +67,7 @@ export default class Items extends EventEmitter {
     this.read();
   }
 
-  isRequiredConfig() {
+  hasMissingConfig() {
     return ['lang', 'json_dir', 'mo_dir'].some(key => {
       return !this.config.validate(key);
     });
