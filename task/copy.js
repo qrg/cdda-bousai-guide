@@ -1,6 +1,6 @@
 'use strict';
 
-import fs from 'fs-extra';
+import {copySync} from 'fs-extra';
 import path from 'path';
 import glob from 'glob';
 import {SRC_PATH, DIST_PATH} from './path-config';
@@ -16,6 +16,6 @@ RESOURCES
   .reduce((values, value) => [...values, ...value])
   .forEach(src => {
     const dist = src.replace(SRC_PATH, DIST_PATH);
-    fs.copySync(src, dist, {clobber: true});
+    copySync(src, dist, {clobber: true});
     console.log(dist);
   });
