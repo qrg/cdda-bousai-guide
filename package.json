@@ -46,7 +46,7 @@
     "cross-env": "^3.1.2",
     "css-loader": "^0.25.0",
     "devtron": "^1.4.0",
-    "electron": "^1.4.3",
+    "electron": "^1.4.5",
     "electron-devtools-installer": "^2.0.1",
     "electron-packager": "^8.1.0",
     "electron-rebuild": "^1.2.1",
