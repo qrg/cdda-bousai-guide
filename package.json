@@ -107,7 +107,7 @@
     "files": [
       "test/**/*.test.js"
     ],
-    "failFast": true,
+    "failFast": false,
     "timeout": "2m",
     "require": [
       "babel-register"
