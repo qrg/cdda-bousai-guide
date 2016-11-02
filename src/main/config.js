@@ -22,7 +22,13 @@ const DEFAULT_CONFIG = new Map([
   ['window_x', undefined],
   ['window_y', undefined],
   ['window_width', 800],
-  ['window_height', 600]
+  ['window_height', 600],
+  ['index_ignore_keys', [
+    'id',
+    'color',
+    'symbol',
+    'name_plural'
+  ]]
 ]);
 
 export default class Config extends Store {

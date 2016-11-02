@@ -49,7 +49,8 @@ class Main {
       console.log('onItemsInitialized');
       sender.send(channelI, err);
       this.indexer = new Indexer(this.items, {
-        lang: this.config.get('lang')
+        lang: this.config.get('lang'),
+        ignoreKeys: this.config.get('index_ignore_keys')
       });
       this.indexer.initialize();
     };

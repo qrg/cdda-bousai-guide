@@ -15,11 +15,7 @@ export default class Indexer extends Store {
   constructor(docs, options) {
     const params = {
       lang: 'en',
-      ignoreKeys: [
-        'id',
-        'color',
-        'symbol'
-      ],
+      ignoreKeys: [],
       ...options
     };
 
