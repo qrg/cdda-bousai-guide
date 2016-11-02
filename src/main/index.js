@@ -2,6 +2,7 @@
 
 import {app, ipcMain as ipc} from 'electron';
 
+import setAppMenu from './menu';
 import PrimaryWindow from './primary-window';
 import Config from './config';
 import Items from './items';
@@ -24,6 +25,7 @@ class Main {
 
   onReady() {
     this.config.initialize();
+    setAppMenu();
   }
 
   onWindowAllClosed() {
