@@ -5,6 +5,7 @@ import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
 import React from 'react';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import Inquirer from './inquirer';
+import SearchBox from './search-box';
 
 // Needed for onTouchTap
 // http://stackoverflow.com/a/34015469/988941
@@ -33,7 +34,7 @@ export default class App extends React.Component {
         {
           (this.state.isInitializing)
             ? <Inquirer key='inquirer' emitter={this.emitter} />
-            : <main>hi.</main>
+            : <SearchBox key='search-box' emitter={this.emitter}></SearchBox>
         }
       </ReactCSSTransitionGroup>
     );

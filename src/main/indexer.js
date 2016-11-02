@@ -8,7 +8,7 @@ import {isString} from '../lib/string';
 import {USER_DATA} from './paths';
 import wait from '../lib/wait';
 
-const BUILD_INTERVAL_MS = 3;
+const BUILD_INTERVAL_MS = 2;
 
 export default class Indexer extends Store {
 
@@ -54,7 +54,10 @@ export default class Indexer extends Store {
             if (key === 'translation') {
               const translation = doc[key];
               Object.keys(translation).forEach(tk => {
-                if (isValid(translation[tk], tk)) {
+                if (tk === 'name_plural') {
+                  console.log(tk, isValid(tk, translation[tk]));
+                }
+                if (isValid(tk, translation[tk])) {
                   const tokens = new Tokenizer(this.lang).tokenize(translation[tk]);
                   this.addPosting(tokens, id, `${key}.${tk}`);
                 }

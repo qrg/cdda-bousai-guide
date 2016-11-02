@@ -1,0 +1,100 @@
+@charset "utf-8"
+
+@import "../styles/utilities/variables"
+@import "../styles/bulma/sass/elements/other"
+
+.search-box
+
+  .search-bar
+    @extend .container
+    padding: 24px 0 1px
+    position: fixed
+    top: 0
+    width: calc(100% - 64px)
+    background-color: $body-background
+
+    input
+      width: 100%
+      color: #ccc
+      background-color: $body-background
+      border: none
+      padding: 28px 0 16px
+      font-size: $size-medium
+      font-weight: bold
+      line-height: 2
+      box-shadow: none
+      transition: color .2s ease, border-color .2s ease
+      border-bottom: 2px solid lighten($body-background, 8%)
+      border-radius: 0
+
+      &:hover
+        border-bottom-color: darken(desaturate($primary, 72%), 24%)
+      &:focus
+        color: $white
+        border-bottom-color: desaturate($primary, 8%) /*#d47070*/
+        &::-webkit-input-placeholder
+          color: desaturate(lighten($body-background, 8%), 4%)
+      &::-webkit-input-placeholder
+        padding-left: 28px
+        color: desaturate(lighten($body-background, 16%), 4%)
+      &:placeholder-shown
+        + .fa
+          color: desaturate(lighten($body-background, 16%), 4%)
+        &:focus
+          + .fa
+            color: desaturate(lighten($body-background, 6%), 4%)
+
+    .fa
+      position: absolute
+      left: 2px
+      bottom: 12px
+      font-size: $size-medium
+      color: transparent
+      z-index: 0
+      pointer-events: none
+
+  .search-results
+    margin-top: 50px
+    color: $grey-light
+
+    .search-results-summary
+      font-size: $size-small
+
+    .search-results-list
+      display: block
+      margin-left: 0
+      margin-right: 0
+      list-style-type: none
+
+    .search-results-item
+      margin-bottom: 24px
+
+    .search-results-title
+      display: block
+      color: $grey-lighter
+      font-size: $size-normal
+      font-weight: bold
+    .search-results-title-sub
+      color: $grey
+      margin-right: 1em
+      font-size: $size-small
+
+    .occurrences
+      font-size: $size-small
+      margin-left: 0
+      margin-right: 0
+      list-style-type: none
+
+    .occurrence
+      margin-bottom: 8px
+
+    .occurrence-key
+      padding: 2px 6px
+      border-radius: 2px
+      color: lighten(desaturate($primary, 72%), 8%)
+      background-color: darken(desaturate($primary, 88%), 28%) /*#515256*/
+    .occurrence-preview
+      margin-left: 6px
+    .occurrence-matched
+      font-weight: bold
+      color: $grey-lighter
