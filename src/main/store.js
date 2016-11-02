@@ -1,6 +1,6 @@
 'use strict';
 
-import {createReadStream, outputJson} from 'fs-extra';
+import {createReadStream, outputFile} from 'fs-extra';
 import EventEmitter from 'events';
 import JSONStream from 'JSONStream';
 import {isPlainObject} from '../lib/object';
@@ -14,6 +14,39 @@ export default class Store extends EventEmitter {
     this.version = version;
     this.filePath = filePath;
     this._data = new Map();
+  }
+
+  beforeInitialLoad() {}
+
+  beforeInitialSave() {}
+
+  async initialize() {
+    try {
+      await this.beforeInitialLoad();
+      await this.load();
+      this.emit('initialized');
+
+    } catch (e) {
+
+      if (e.code !== 'ENOENT' && e.code !== 'VERSION_CONFLICT') {
+        // TODO notify
+        console.error(`${this.storeName} initializing failed.`);
+        console.error(e);
+        return;
+      }
+
+      // TODO notify
+      console.log(`Creating new ${this.storeName} ...`, this.filePath);
+
+      try {
+        await this.beforeInitialSave();
+        await this.save();
+        this.emit('initialized');
+      } catch (e) {
+        console.error(e);
+      }
+
+    }
   }
 
   load() {
@@ -75,10 +108,11 @@ export default class Store extends EventEmitter {
       const output = {
         version: this.version,
         rows_length: this._data.size,
-        rows: [...this._data.entries()].sort()
+        rows: [...this._data].sort()
       };
 
-      outputJson(this.filePath, output, {spaces: 2}, (err) => {
+      // write a compact json
+      outputFile(this.filePath, JSON.stringify(output), (err) => {
         if (err) reject(err);
         console.log(`Saved ${this.filePath} Successfully`);
         done();
@@ -106,12 +140,16 @@ export default class Store extends EventEmitter {
     return this._data.has(key);
   }
 
-  get size() {
-    return this._data.size;
-  }
-
   entries() {
     return this._data.entries();
+  }
+
+  forEach(iter) {
+    return this._data.forEach(iter);
+  }
+
+  get size() {
+    return this._data.size;
   }
 
 }

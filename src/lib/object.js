@@ -23,3 +23,9 @@ export function filterObject(obj, condition) {
       return newObj;
     }, {});
 }
+
+export function deepValue(obj, path) {
+  return path.split('.').reduce((prev, key) => {
+    return prev[key];
+  }, obj);
+}

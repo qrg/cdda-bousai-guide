@@ -1,7 +1,13 @@
 'use strict';
 
 import test from 'ava';
-import {getType, is, isPlainObject, filterObject} from '../../src/lib/object';
+import {
+  getType,
+  is,
+  isPlainObject,
+  filterObject,
+  deepValue
+} from '../../src/lib/object';
 
 test('getType(arg) returns string as class name of a argument.', t => {
   t.is(getType('string'), 'String');
@@ -57,4 +63,14 @@ test('filterObject(obj, condition) returns filtered object depends on condition'
 
   t.true(isPlainObject(resultFilterObject));
   t.is(Object.keys(resultFilterObject).length, 1);
+});
+
+test('deepValue(ObjectOrArray, pathString) returns deep nested value', t => {
+  const obj = {
+    foo: {bar: [{baz: 'qux'}]}
+  };
+  const arr = [obj];
+
+  t.is(deepValue(obj, 'foo.bar.0.baz'), 'qux');
+  t.is(deepValue(arr, '0.foo.bar.0.baz'), 'qux');
 });

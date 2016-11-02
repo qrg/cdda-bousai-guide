@@ -38,33 +38,6 @@ export default class Config extends Store {
     ipc.on('main:request-save-config', (...args) => this.onRequestSaveConfig(...args));
   }
 
-  async initialize() {
-    try {
-      await this.load();
-      this.emit('initialized');
-
-    } catch (e) {
-
-      if (e.code !== 'ENOENT' && e.code !== 'VERSION_CONFLICT') {
-        // TODO notify
-        console.error('Config file initializing failed.');
-        console.error(e);
-        return;
-      }
-
-      // TODO notify
-      console.log('Create new config.json as default settings', this.filePath);
-
-      try {
-        this.save();
-        this.emit('initialized');
-      } catch (e) {
-        console.error(e);
-      }
-
-    }
-  }
-
   validate(key) {
     const val = this.get(key);
     return (val !== '' && val !== null && typeof val !== 'undefined');

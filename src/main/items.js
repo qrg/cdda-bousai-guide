@@ -31,24 +31,8 @@ export default class Items extends Store {
     this.moDir = moDir;
   }
 
-  async initialize() {
-    try {
-
-      await this.load();
-      this.emit('initialized');
-
-    } catch (e) {
-
-      if (e.code !== 'ENOENT' && e.code !== 'VERSION_CONFLICT') {
-        console.error(e);
-        return;
-      }
-
-      await this.build();
-      console.log('Successfully built items.');
-      this.save();
-      this.emit('initialized');
-    }
+  async beforeInitialSave() {
+    await this.build();
   }
 
   collectSources() {
@@ -91,7 +75,7 @@ export default class Items extends Store {
 
       console.log('items: Mapping translations to items.');
 
-      this.emit('init-progress', null, {
+      this.emit('build-progress', null, {
         max: items.length,
         value: 0,
         rate: 0
