@@ -3,6 +3,7 @@
 import {createReadStream, outputFile} from 'fs-extra';
 import EventEmitter from 'events';
 import JSONStream from 'JSONStream';
+import logger from './logger';
 import {isPlainObject} from '../lib/object';
 import {isArray} from '../lib/array';
 
@@ -29,21 +30,19 @@ export default class Store extends EventEmitter {
     } catch (e) {
 
       if (e.code !== 'ENOENT' && e.code !== 'VERSION_CONFLICT') {
-        // TODO notify
-        console.error(`${this.storeName} initializing failed.`);
-        console.error(e);
+        logger.error(`${this.storeName} initializing failed.`);
+        logger.error(e);
         return;
       }
 
-      // TODO notify
-      console.log(`Creating new ${this.storeName} ...`, this.filePath);
+      logger.info(`Creating new ${this.storeName}...`, this.filePath);
 
       try {
         await this.beforeInitialSave();
         await this.save();
-        this.emit('initialized');
+        this.emit('init-done');
       } catch (e) {
-        console.error(e);
+        logger.error(e);
       }
 
     }
@@ -53,31 +52,36 @@ export default class Store extends EventEmitter {
     const name = this.storeName;
     const file = this.filePath;
     return new Promise((done, reject) => {
-      console.log(`Loading ${name} ${file} ...`);
+      logger.info(`Loading ${name}`);
+      logger.log(file);
 
       let max = 0;
 
       const stream = createReadStream(file, {encoding: 'utf8'})
         .on('error', (err) => { // require before JSONStream.parse() to reject for ENOENT
-          console.log(`Failed to load ${name}.`);
+          logger.info(`Failed to load ${name}.`);
           reject(err);
         })
         .pipe(JSONStream.parse('rows.*'));
 
       stream.on('end', () => {
-        console.log(`Successfully loaded ${name}.`);
+        logger.info(`Loaded ${name}`);
+        this.emit('loading-done');
         done();
       });
 
       stream.on('header', (data) => {
         const {version, rows_length} = data;
+
         if (version !== this.version) {
           reject({
             message: `${name} version ${version} does not correspond to ${this.version}`,
             code: 'VERSION_CONFLICT'
           });
         }
+
         max = rows_length;
+        this.emit('loading-start');
       });
 
       stream.on('data', (data) => {
@@ -102,7 +106,7 @@ export default class Store extends EventEmitter {
   }
 
   save() {
-    console.log(`Saving ${this.filePath} ...`);
+    logger.info(`Saving ${this.filePath} ...`);
 
     return new Promise((done, reject) => {
       const output = {
@@ -114,7 +118,7 @@ export default class Store extends EventEmitter {
       // write a compact json
       outputFile(this.filePath, JSON.stringify(output), (err) => {
         if (err) reject(err);
-        console.log(`Saved ${this.filePath} Successfully`);
+        logger.info(`Saved ${this.filePath} successfully`);
         done();
       });
     });

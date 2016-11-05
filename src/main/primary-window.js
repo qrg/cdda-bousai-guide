@@ -6,6 +6,7 @@ import {
   productName as PRODUCT_NAME,
   version as VERSION
 } from '../../package.json';
+import logger from './logger';
 
 const INDEX_HTML = `file://${__dirname}/../renderer/index.html`;
 const INITIAL_BG_COLOR = '#323b4b'; // display until finishing apply stylesheet
@@ -32,12 +33,12 @@ export default class PrimaryWindow {
   }
 
   onReadyToShow() {
-    console.log('primary window is ready to show.');
+    logger.log('primary window is ready to show.');
     this.window.show();
   }
 
   onClosed() {
-    console.log('Primary window is closed.');
+    logger.log('Primary window is closed.');
     this.window = null;
   }
 
@@ -45,7 +46,7 @@ export default class PrimaryWindow {
     const [x, y] = this.window.getPosition();
     this.config.set('window_x', x);
     this.config.set('window_y', y);
-    console.log('window move', x, y);
+    logger.log('window move', x, y);
     this.config.save();
   }
 
@@ -53,7 +54,7 @@ export default class PrimaryWindow {
     const [width, height] = this.window.getSize();
     this.config.set('window_width', width);
     this.config.set('window_height', height);
-    console.log('window resize', width, height);
+    logger.log('window resize', width, height);
     this.config.save();
   }
 

@@ -7,6 +7,7 @@ import PrimaryWindow from './primary-window';
 import Config from './config';
 import Items from './items';
 import Indexer from './indexer';
+import logger from './logger';
 
 import search from './search';
 
@@ -72,14 +73,14 @@ class Main {
   }
 
   onRequestSearch(event, term) {
-    console.log('onRequestSearch', term);
+    logger.info('search term:', term);
     const channel = 'main:reply-search';
     const {sender} = event;
     try {
       const {results, searchTime} = search(term, this.items, this.indexer, this.config.get('lang'));
       sender.send(channel, null, {results, searchTime});
     } catch (e) {
-      console.error(e);
+      logger.error(e);
       sender.send(channel, e, {results: []});
     }
 

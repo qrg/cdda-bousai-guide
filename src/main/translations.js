@@ -4,6 +4,8 @@ import {readFile} from 'fs';
 import parser from 'gettext-parser';
 import glob from 'glob';
 
+import logger from './logger';
+
 export default class Translations {
 
   constructor({lang, moDir}) {
@@ -15,7 +17,7 @@ export default class Translations {
     try {
       this._translations = await this.parse();
     } catch (e) {
-      console.error(e);
+      logger.error(e);
     }
   }
 
@@ -31,7 +33,7 @@ export default class Translations {
 
     try {
       const moContents = await this.read();
-      console.log('Parsing mo files...');
+      logger.log('Parsing mo files...');
 
       return moContents
         .map(mo => {
@@ -40,14 +42,14 @@ export default class Translations {
         })
         .reduce((values, value) => [...values, ...value], []);
     } catch (e) {
-      return console.error(e);
+      return logger.error(e);
     }
   }
 
   async read() {
     const pattern = `${this.moDir}/${this.lang}/**/*.mo`;
 
-    console.log(`Reading mo files from ${pattern}`);
+    logger.log(`Reading mo files from ${pattern}`);
 
     const moPaths = await new Promise((done, reject) => {
       glob(pattern, (err, files) => {
@@ -55,7 +57,7 @@ export default class Translations {
         done(files);
       });
     }).catch(e => {
-      return console.error(e);
+      return logger.error(e);
     });
 
     const readFiles = moPaths.map(file => {
@@ -65,7 +67,7 @@ export default class Translations {
           return done(data);
         });
       }).catch(e => {
-        return console.error(e);
+        return logger.error(e);
       });
     });
 

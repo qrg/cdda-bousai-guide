@@ -1,9 +1,11 @@
 'use strict';
 
+import logger from '../main/logger';
+
 module.exports = () => {
-  console.log('================================================================');
-  console.log('Installing devtools.');
-  console.log('================================================================');
+  logger.separator('log');
+  logger.log('Installing devtools.');
+  logger.separator('log');
 
   const {app} = require('electron');
   const installExtension = require('electron-devtools-installer');

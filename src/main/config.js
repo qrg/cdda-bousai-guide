@@ -4,6 +4,7 @@ import Store from './store';
 import {basename} from 'path';
 import {ipcMain as ipc} from 'electron';
 
+import logger from './logger';
 import {isString} from '../lib/string';
 import {
   CONFIG_JSON,
@@ -60,7 +61,7 @@ export default class Config extends Store {
       langs.unshift('en');
       event.sender.send(channel, null, {langs, defaultValue});
     } catch (e) {
-      console.error(e);
+      logger.error(e);
       event.sender.send(channel, e, null);
     }
   }
@@ -85,7 +86,7 @@ export default class Config extends Store {
       });
 
     } catch (e) {
-      console.error(e);
+      logger.error(e);
       sender.send(channel, e, {
         file: CONFIG_JSON,
         data: this.entries()
@@ -111,12 +112,12 @@ export default class Config extends Store {
     const channel = 'main:reply-exe-path-validation';
     try {
       if (!isString(exePath)) {
-        console.error('path must be String');
+        logger.error('path must be String');
       }
       const errMsgs = await validateExePath(exePath);
       event.sender.send(channel, null, {errMsgs, exePath});
     } catch (e) {
-      console.error(e);
+      logger.error(e);
       event.sender.send(channel, e, null);
     }
   }

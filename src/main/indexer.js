@@ -4,6 +4,7 @@ import {join} from 'path';
 
 import Store from './store';
 import Tokenizer from './tokenizers/tokenizer';
+import logger from './logger';
 import {isString} from '../lib/string';
 import {USER_DATA} from './paths';
 import wait from '../lib/wait';
@@ -34,6 +35,7 @@ export default class Indexer extends Store {
     let count = 0;
     const tasks = [];
 
+    logger.info('Constructing index...');
     this.docs.forEach((doc, id) => {
       const task = () => {
         return new Promise(done => {

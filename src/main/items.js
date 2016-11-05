@@ -5,6 +5,7 @@ import {readJson, unlink} from 'fs-extra';
 import glob from 'glob';
 import uuid from 'uuid';
 
+import logger from './logger';
 import Store from './store';
 import Translations from './translations';
 import {buildInheritedItems} from '../lib/inherit-items';
@@ -36,13 +37,12 @@ export default class Items extends Store {
   }
 
   collectSources() {
-    console.log('collectSources');
     const pattern = `${this.jsonDir}/items/**/*.json`;
     const jsonPaths = glob.sync(pattern);
 
-    //console.log(jsonPaths);
+    logger.debug(jsonPaths.join('\n'));
 
-    console.log(`Reading item json files from ${pattern}`);
+    logger.log(`Reading item json files from ${pattern}`);
     const readFileTasks = jsonPaths.map(file => {
       return new Promise((done, reject) => {
         readJson(file, (err, data) => {
@@ -58,22 +58,22 @@ export default class Items extends Store {
   }
 
   async build() {
-    console.log('Building items data...');
+    logger.info('Building items data...');
     try {
       const sources = await this.collectSources();
       const translations = await this.initTranslations();
       let items;
 
-      console.log('items: Collecting items data.');
+      logger.log('items: Collecting items data.');
       items = sources.reduce((items, item) => [...items, ...item]);
 
-      console.log('items: Filtering items data.');
+      logger.log('items: Filtering items data.');
       items = items.filter(filterOutIgnoreItems);
 
-      console.log('items: Computing inherited items.');
+      logger.log('items: Computing inherited items.');
       items = items.map(buildInheritedItems);
 
-      console.log('items: Mapping translations to items.');
+      logger.log('items: Mapping translations to items.');
 
       this.emit('build-progress', null, {
         max: items.length,
@@ -105,7 +105,7 @@ export default class Items extends Store {
       }, Promise.resolve());
 
     } catch (e) {
-      console.error(e);
+      logger.error(e);
     }
   }
 
@@ -124,7 +124,7 @@ export default class Items extends Store {
         if (err) return reject(err);
         return done();
       });
-    }).catch(err => console.error(err));
+    }).catch(e => logger.error(e));
   }
 
   mergeTranslations(item, translations) {
@@ -141,7 +141,7 @@ export default class Items extends Store {
         }
         item.translation[key] = translation.msgstr[0];
         done(item);
-      }).catch(err => console.error(err));
+      }).catch(e => logger.error(e));
     });
 
     return Promise.all(tasks).then(vals => {

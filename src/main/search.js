@@ -1,6 +1,7 @@
 'use strict';
 
 import Tokenizer from './tokenizers/tokenizer';
+import logger from './logger';
 
 function tokenize(term, lang) {
   const words = term.split(/\s+/);
@@ -67,17 +68,17 @@ export default function (term, items, index, lang) {
       return 0;
     });
 
-  console.log('===============================================');
-  console.log('search tokens: ', tokens);
+  logger.separator();
+  logger.log('search tokens: ', tokens);
   results.forEach(e => {
     const keys = e.tokens.map(t => t.token);
-    console.log(keys, e.ref.translation.name);
+    logger.log(keys, e.ref.translation.name);
   });
 
   console.timeEnd('search-time');
   const searchTimes = process.hrtime(start); // => [second, nano-second]
   const searchTimeMS = Math.round(searchTimes[1] / 1000000 * 1000) / 1000;
-  console.log('results    : ', results.length);
+  logger.log('results    : ', results.length);
 
   return {
     results: results,
