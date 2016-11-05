@@ -57,27 +57,27 @@ export default class Inquirer extends React.Component {
   }
 
   componentWillMount() {
-    ipc.on('main:reply-config-status', (...args) => this.onReplyConfigStatus(...args));
-    ipc.on('main:info', (...args) => this.onInfo(...args));
-    ipc.on('main:error', (...args) => this.onError(...args));
-    ipc.on('main:items-build-start', (...args) => this.onItemsBuildStart(...args));
-    ipc.on('main:items-build-progress',
+    ipc.on('reply-config-status', (...args) => this.onReplyConfigStatus(...args));
+    ipc.on('info', (...args) => this.onInfo(...args));
+    ipc.on('error', (...args) => this.onError(...args));
+    ipc.on('items-build-start', (...args) => this.onItemsBuildStart(...args));
+    ipc.on('items-build-progress',
       throttle((...args) => {
         return this.onItemsBuildProgress(...args);
       }, 500, {leading: false, trailing: true})
     );
-    ipc.on('main:items-build-done', (...args) => this.onItemsBuildDone(...args));
-    ipc.on('main:indexer-build-start', (...args) => this.onIndexerBuildStart(...args));
-    ipc.on('main:indexer-build-progress',
+    ipc.on('items-build-done', (...args) => this.onItemsBuildDone(...args));
+    ipc.on('indexer-build-start', (...args) => this.onIndexerBuildStart(...args));
+    ipc.on('indexer-build-progress',
       throttle((...args) => {
         return this.onIndexerBuildProgress(...args);
       }, 500, {leading: false, trailing: true})
     );
-    ipc.on('main:indexer-build-done', (...args) => this.onIndexerBuildDone(...args));
-    ipc.on('main:indexer-init-done', (...args) => this.onIndexerInitDone(...args));
-    ipc.on('main:reply-exe-path-validation', (...args) => this.onReplyExePathValidation(...args));
-    ipc.on('main:reply-lang-list', (...args) => this.onReplyLangList(...args));
-    ipc.on('main:reply-save-config', (...args) => this.onReplySaveConfig(...args));
+    ipc.on('indexer-build-done', (...args) => this.onIndexerBuildDone(...args));
+    ipc.on('indexer-init-done', (...args) => this.onIndexerInitDone(...args));
+    ipc.on('reply-exe-path-validation', (...args) => this.onReplyExePathValidation(...args));
+    ipc.on('reply-lang-list', (...args) => this.onReplyLangList(...args));
+    ipc.on('reply-save-config', (...args) => this.onReplySaveConfig(...args));
     this.props.emitter.on('app:request-open-dialog-exe-path', () => this.onRequestOpenDialogExePath());
     this.props.emitter.on('app:request-lang-list', () => this.onRequestLangList());
     this.props.emitter.on('app:inquiry-back', () => this.onInquiryBack());
@@ -86,24 +86,24 @@ export default class Inquirer extends React.Component {
 
   componentDidMount() {
     wait(1000).then(() => {
-      ipc.send('main:request-config-status');
+      ipc.send('request-config-status');
     });
   }
 
   componentWillUnmount() {
-    ipc.removeAllListeners('main:reply-config-status');
-    ipc.removeAllListeners('main:info');
-    ipc.removeAllListeners('main:error');
-    ipc.removeAllListeners('main:items-build-start');
-    ipc.removeAllListeners('main:items-build-progress');
-    ipc.removeAllListeners('main:items-build-done');
-    ipc.removeAllListeners('main:indexer-build-start');
-    ipc.removeAllListeners('main:indexer-build-progress');
-    ipc.removeAllListeners('main:indexer-build-done');
-    ipc.removeAllListeners('main:indexer-init-done');
-    ipc.removeAllListeners('main:reply-exe-path-validation');
-    ipc.removeAllListeners('main:reply-lang-list');
-    ipc.removeAllListeners('main:reply-save-config');
+    ipc.removeAllListeners('reply-config-status');
+    ipc.removeAllListeners('info');
+    ipc.removeAllListeners('error');
+    ipc.removeAllListeners('items-build-start');
+    ipc.removeAllListeners('items-build-progress');
+    ipc.removeAllListeners('items-build-done');
+    ipc.removeAllListeners('indexer-build-start');
+    ipc.removeAllListeners('indexer-build-progress');
+    ipc.removeAllListeners('indexer-build-done');
+    ipc.removeAllListeners('indexer-init-done');
+    ipc.removeAllListeners('reply-exe-path-validation');
+    ipc.removeAllListeners('reply-lang-list');
+    ipc.removeAllListeners('reply-save-config');
     this.props.emitter.removeAllListeners('app:request-open-dialog-exe-path');
     this.props.emitter.removeAllListeners('app:request-lang-list');
     this.props.emitter.removeAllListeners('app:inquiry-back');
@@ -131,7 +131,7 @@ export default class Inquirer extends React.Component {
           errors: [],
           isBusy: true
         });
-        ipc.send('main:request-exe-path-validation', paths[0]);
+        ipc.send('request-exe-path-validation', paths[0]);
         return;
       }
       this.setStateDeep('exePathField', {
@@ -147,7 +147,7 @@ export default class Inquirer extends React.Component {
 
   requestInitItems() {
     wait(1000).then(() => {
-      ipc.send('main:request-items-init');
+      ipc.send('request-items-init');
     });
   }
 
@@ -211,12 +211,12 @@ export default class Inquirer extends React.Component {
 
   onRequestLangList() {
     this.setStateDeep('langField', {isBusy: true});
-    ipc.send('main:request-lang-list', this.config.get('exe_path'));
+    ipc.send('request-lang-list', this.config.get('exe_path'));
   }
 
   onLangSelected(selected) {
     this.config.set('lang', selected);
-    ipc.send('main:request-save-config', [...this.config.values()]);
+    ipc.send('request-save-config', [...this.config.values()]);
     this.setState({step: 1});
     this.requestInitItems();
   }

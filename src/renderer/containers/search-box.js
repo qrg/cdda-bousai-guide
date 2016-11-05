@@ -1,7 +1,6 @@
 'use strict';
 
 import {EventEmitter} from 'events';
-import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
 import {ipcRenderer as ipc} from 'electron';
 import React, {PropTypes} from 'react';
 import debounce from 'lodash.debounce';
@@ -18,7 +17,7 @@ export default class SearchBox extends React.Component {
       searchTime: 0
     };
 
-    ipc.on('main:reply-search', (...args) => this.onReplySearch(...args));
+    ipc.on('reply-search', (...args) => this.onReplySearch(...args));
     this.props.emitter.on('app:send-search-term', debounce(
       (...args) => this.onSendSearchTerm(...args),
       300
@@ -76,7 +75,7 @@ export default class SearchBox extends React.Component {
       this.setState({results: []});
       return;
     }
-    ipc.send('main:request-search', term);
+    ipc.send('request-search', term);
   }
 
 }

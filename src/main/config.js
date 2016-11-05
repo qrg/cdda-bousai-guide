@@ -39,10 +39,10 @@ export default class Config extends Store {
 
     DEFAULT_CONFIG.forEach((v, k) => this.set(k, v));
 
-    ipc.on('main:request-config-status', (event) => this.onRequestConfigStatus(event));
-    ipc.on('main:request-exe-path-validation', Config.onRequestExePathValidation);
-    ipc.on('main:request-lang-list', (...args) => this.onRequestLangList(...args));
-    ipc.on('main:request-save-config', (...args) => this.onRequestSaveConfig(...args));
+    ipc.on('request-config-status', (event) => this.onRequestConfigStatus(event));
+    ipc.on('request-exe-path-validation', Config.onRequestExePathValidation);
+    ipc.on('request-lang-list', (...args) => this.onRequestLangList(...args));
+    ipc.on('request-save-config', (...args) => this.onRequestSaveConfig(...args));
   }
 
   validate(key) {
@@ -51,7 +51,7 @@ export default class Config extends Store {
   }
 
   async onRequestLangList(event, exePath) {
-    const channel = 'main:reply-lang-list';
+    const channel = 'reply-lang-list';
     try {
       const baseDir = getCDDARootPathByExePath(exePath);
       const moDir = getMoDir(baseDir);
@@ -67,7 +67,7 @@ export default class Config extends Store {
   }
 
   async onRequestSaveConfig(event, values) {
-    const channel = 'main:reply-save-config';
+    const channel = 'reply-save-config';
     const {sender} = event;
     try {
       const [exe_path, lang] = values;
@@ -99,7 +99,7 @@ export default class Config extends Store {
   }
 
   onRequestConfigStatus(event) {
-    const channel = 'main:reply-config-status';
+    const channel = 'reply-config-status';
     const {sender} = event;
     if (this.hasMissingConfig()) {
       sender.send(channel, null, {isFulfilled: false});
@@ -109,7 +109,7 @@ export default class Config extends Store {
   }
 
   static async onRequestExePathValidation(event, exePath) {
-    const channel = 'main:reply-exe-path-validation';
+    const channel = 'reply-exe-path-validation';
     try {
       if (!isString(exePath)) {
         logger.error('path must be String');

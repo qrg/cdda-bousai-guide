@@ -20,8 +20,8 @@ class Main {
 
     app.on('ready', () => this.onReady());
     app.on('window-all-closed', () => this.onWindowAllClosed());
-    ipc.on('main:request-items-init', (event) => this.onRequestItemsInit(event));
-    ipc.on('main:request-search', (...args) => this.onRequestSearch(...args));
+    ipc.on('request-items-init', (event) => this.onRequestItemsInit(event));
+    ipc.on('request-search', (...args) => this.onRequestSearch(...args));
     this.config.on('init-done', () => this.onConfigInitDone());
   }
 
@@ -45,10 +45,10 @@ class Main {
     const contents = this.primaryWindow.window.webContents;
 
     logger.on('info', (...args) => {
-      contents.send('main:info', ...args);
+      contents.send('info', ...args);
     });
     logger.on('error', (...args) => {
-      contents.send('main:error', ...args);
+      contents.send('error', ...args);
     });
 
   }
@@ -74,17 +74,17 @@ class Main {
   }
 
   onItemsBuildStart(sender) {
-    const channel = 'main:items-build-start';
+    const channel = 'items-build-start';
     sender.send(channel);
   }
 
   onItemsBuildProgress(sender, err, state) {
-    const channel = 'main:items-build-progress';
+    const channel = 'items-build-progress';
     sender.send(channel, err, state);
   }
 
   onItemsBuildDone(sender) {
-    const channel = 'main:items-build-done';
+    const channel = 'items-build-done';
     this.shouldRebuildIndexer = true;
     sender.send(channel);
   }
@@ -106,29 +106,29 @@ class Main {
   }
 
   onIndexerBuildStart(sender) {
-    const channel = 'main:indexer-build-start';
+    const channel = 'indexer-build-start';
     sender.send(channel);
   }
 
   onIndexerBuildProgress(sender, err, state) {
-    const channel = 'main:indexer-build-progress';
+    const channel = 'indexer-build-progress';
     sender.send(channel, err, state);
   }
 
   onIndexerBuildDone(sender) {
-    const channel = 'main:indexer-build--done';
+    const channel = 'indexer-build--done';
     sender.send(channel);
   }
 
   onIndexerInitDone(sender) {
-    const channel = 'main:indexer-init-done';
+    const channel = 'indexer-init-done';
     this.shouldRebuildIndexer = false;
     sender.send(channel);
   }
 
   onRequestSearch(event, term) {
     logger.info('search term:', term);
-    const channel = 'main:reply-search';
+    const channel = 'reply-search';
     const {sender} = event;
     try {
       const {results, searchTime} = search(term, this.items, this.indexer, this.config.get('lang'));
