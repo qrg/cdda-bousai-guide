@@ -25,7 +25,7 @@ export default class LangField extends Component {
 
   componentDidMount() {
     if (this.props.langs.length === 0) {
-      this.props.emitter.emit('app:request-lang-list');
+      this.props.emitter.emit('request-lang-list');
     }
   }
 
@@ -34,11 +34,11 @@ export default class LangField extends Component {
   }
 
   onClickBack() {
-    this.props.emitter.emit('app:inquiry-back');
+    this.props.emitter.emit('inquiry-back');
   }
 
   onClickNext() {
-    this.props.emitter.emit('app:lang-selected', this.selected);
+    this.props.emitter.emit('lang-selected', this.selected);
   }
 
   render() {

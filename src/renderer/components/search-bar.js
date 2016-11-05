@@ -20,7 +20,7 @@ export default class SearchBar extends React.Component {
   }
 
   sendTerm(term) {
-    this.props.emitter.emit('app:send-search-term', term);
+    this.props.emitter.emit('send-search-term', term);
   }
 
   onChange(event) {

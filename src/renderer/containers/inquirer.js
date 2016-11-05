@@ -78,11 +78,10 @@ export default class Inquirer extends React.Component {
     ipc.on('reply-exe-path-validation', (...args) => this.onReplyExePathValidation(...args));
     ipc.on('reply-lang-list', (...args) => this.onReplyLangList(...args));
     ipc.on('reply-save-config', (...args) => this.onReplySaveConfig(...args));
-    this.props.emitter.on('app:request-open-dialog-exe-path', () => this.onRequestOpenDialogExePath());
-    this.props.emitter.on('app:request-lang-list', () => this.onRequestLangList());
-    this.props.emitter.on('app:inquiry-back', () => this.onInquiryBack());
-    this.props.emitter.on('app:lang-selected', (...args) => this.onLangSelected(...args));
-  }
+    this.props.emitter.on('request-open-dialog-exe-path', () => this.onRequestOpenDialogExePath());
+    this.props.emitter.on('request-lang-list', () => this.onRequestLangList());
+    this.props.emitter.on('inquiry-back', () => this.onInquiryBack());
+    this.props.emitter.on('lang-selected', (...args) => this.onLangSelected(...args));
 
   componentDidMount() {
     wait(1000).then(() => {
@@ -104,10 +103,10 @@ export default class Inquirer extends React.Component {
     ipc.removeAllListeners('reply-exe-path-validation');
     ipc.removeAllListeners('reply-lang-list');
     ipc.removeAllListeners('reply-save-config');
-    this.props.emitter.removeAllListeners('app:request-open-dialog-exe-path');
-    this.props.emitter.removeAllListeners('app:request-lang-list');
-    this.props.emitter.removeAllListeners('app:inquiry-back');
-    this.props.emitter.removeAllListeners('app:lang-selected');
+    this.props.emitter.removeAllListeners('request-open-dialog-exe-path');
+    this.props.emitter.removeAllListeners('request-lang-list');
+    this.props.emitter.removeAllListeners('inquiry-back');
+    this.props.emitter.removeAllListeners('lang-selected');
   }
 
   stepNext() {

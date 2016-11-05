@@ -21,7 +21,7 @@ export default class ExePathField extends Component {
   }
 
   onClick() {
-    this.props.emitter.emit('app:request-open-dialog-exe-path');
+    this.props.emitter.emit('request-open-dialog-exe-path');
   }
 
   render() {
