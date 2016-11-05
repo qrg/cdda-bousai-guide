@@ -25,7 +25,7 @@ export default class App extends React.Component {
       isInitializing: true
     };
     this.emitter = new EventEmitter();
-    this.emitter.on('initialized', () => this.onInitialized());
+    this.emitter.on('init-done', () => this.onInitDone());
   }
 
   render() {
@@ -40,7 +40,7 @@ export default class App extends React.Component {
     );
   }
 
-  onInitialized() {
+  onInitDone() {
     this.setState({isInitializing: false});
   }
 

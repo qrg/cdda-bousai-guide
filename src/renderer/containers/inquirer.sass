@@ -22,7 +22,7 @@
 
     .content
       position: relative
-      > span
+      > span /* ReactCSSTransitionGroup insert span  */
         height: calc(100vh - 80px)
         display: flex
         align-items: center
@@ -30,6 +30,11 @@
 
         > *
           position: absolute
+
+        .title-screen
+          min-height: 14rem /* avoid wobbling when toggled the progress bar  */
+
+        .lang-field
           width: 100%
 
     .title
@@ -63,6 +68,10 @@
             opacity: .6
 
     .init-indicator
+      position: relative
+      .spinner
+        margin-top: 40px
+        margin-bottom: 24px
       .loader
         margin: auto
         border-color: transparent transparent $white $white
@@ -70,8 +79,13 @@
         margin-bottom: 8px
         height: 4px
       .status
-        font-family: $family-monospace
         font-size: $size-7
+      .log
+        position: absolute
+        top: 100px
+        width: 100%
+        font-size: $size-7
+        background-color: transparent
 
 .page-appear,
 .page-enter
@@ -108,3 +122,21 @@
   &.step-leave-active
     opacity: 0
     transform: translateX(-24px)
+
+.progress-appear,
+.progress-enter
+  opacity: 0
+  transform: translateY(16px)
+  transition: opacity .2s ease, transform .2s ease
+  &.progress-appear-active,
+  &.progress-enter-active
+    opacity: 1
+    transform: translateY(0)
+
+.progress-leave
+  opacity: 1
+  transform: translateY(0)
+  transition: opacity .2s ease, transform .2s ease
+  &.progress-leave-active
+    opacity: 0
+    transform: translateY(-16px)

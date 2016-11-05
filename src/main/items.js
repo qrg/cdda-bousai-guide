@@ -75,11 +75,7 @@ export default class Items extends Store {
 
       logger.log('items: Mapping translations to items.');
 
-      this.emit('build-progress', null, {
-        max: items.length,
-        value: 0,
-        rate: 0
-      });
+      const max = items.length;
 
       const tasks = items.map((item, i) => {
         return () => {
@@ -88,15 +84,25 @@ export default class Items extends Store {
               this.set(uuid.v4(), value);
 
               this.emit('build-progress', null, {
-                max: items.length,
-                value: i,
-                rate: Math.round(i / items.length * 100)
+                max: max,
+                value: i + 1,
+                rate: Math.round(i + 1 / max * 100)
               });
 
               wait(BUILD_INTERVAL_MS).then(() => done());
             });
           });
         };
+      });
+
+      tasks.unshift(() => {
+        this.emit('build-start');
+        return Promise.resolve();
+      });
+      tasks.push(() => {
+        this.emit('build-done');
+        logger.info('Built items successfully');
+        return Promise.resolve();
       });
 
       // async series

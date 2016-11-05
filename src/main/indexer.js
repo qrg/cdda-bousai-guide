@@ -31,43 +31,42 @@ export default class Indexer extends Store {
     await this.build();
   }
 
+  async initialize(options = {rebuild: false}) {
+    if (!options.rebuild) {
+      super.initialize();
+      return;
+    }
+
+    try {
+      await this.build();
+      await this.save();
+      this.emit('init-done');
+    } catch (e) {
+      logger.error(e);
+    }
+  }
+
   async build() {
-    let count = 0;
     const tasks = [];
+    let count = 0;
+    const max = this.docs.size;
+
+    tasks.push(() => this.emit('build-start'));
 
     logger.info('Constructing index...');
     this.docs.forEach((doc, id) => {
       const task = () => {
         return new Promise(done => {
+          Object.keys(doc).forEach(key => {
+            this._add(doc, id, key);
+          });
+
           count++;
 
-          if (count % 100 === 0) {
-            console.log(count);
-          }
-
-          const isValid = (key, val) => isString(val) && !this.isIgnoreKey(key);
-
-          Object.keys(doc).forEach(key => {
-
-            if (key === 'translation') {
-              const translation = doc[key];
-              Object.keys(translation).forEach(tk => {
-                if (tk === 'name_plural') {
-                  console.log(tk, isValid(tk, translation[tk]));
-                }
-                if (isValid(tk, translation[tk])) {
-                  const tokens = new Tokenizer(this.lang).tokenize(translation[tk]);
-                  this.addPosting(tokens, id, `${key}.${tk}`);
-                }
-              });
-
-              return;
-            }
-
-            if (isString(doc[key]) && !this.isIgnoreKey(key)) {
-              const tokens = new Tokenizer('en').tokenize(doc[key]);
-              this.addPosting(tokens, id, key);
-            }
+          this.emit('build-progress', null, {
+            max: max,
+            value: count,
+            rate: Math.round(count / max * 100)
           });
 
           wait(BUILD_INTERVAL_MS).then(() => done());
@@ -77,11 +76,40 @@ export default class Indexer extends Store {
       tasks.push(task);
     });
 
-    tasks.push(() => this.sortPostingList());
+    tasks.push(() => {
+      this.sortPostingList();
+      return Promise.resolve();
+    });
+    tasks.push(() => {
+      logger.info('Constructed index successfully');
+      this.emit('build-done');
+      return Promise.resolve();
+    });
 
     return tasks.reduce((prev, next) => {
       return prev.then(next);
     }, Promise.resolve());
+  }
+
+  _add(doc, docId, key) {
+    const isValid = (key, val) => isString(val) && !this.isIgnoreKey(key);
+
+    if (key === 'translation') {
+      const translation = doc[key];
+      Object.keys(translation).forEach(tk => {
+        if (isValid(tk, translation[tk])) {
+          const tokens = new Tokenizer(this.lang).tokenize(translation[tk]);
+          this.addPosting(tokens, docId, `${key}.${tk}`);
+        }
+      });
+
+      return;
+    }
+
+    if (isString(doc[key]) && !this.isIgnoreKey(key)) {
+      const tokens = new Tokenizer('en').tokenize(doc[key]);
+      this.addPosting(tokens, docId, key);
+    }
   }
 
   addPosting(tokens, id, key) {

@@ -25,7 +25,7 @@ export default class Store extends EventEmitter {
     try {
       await this.beforeInitialLoad();
       await this.load();
-      this.emit('initialized');
+      this.emit('init-done');
 
     } catch (e) {
 
