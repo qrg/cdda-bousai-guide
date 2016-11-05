@@ -25,7 +25,14 @@ export default class App extends React.Component {
       isInitializing: true
     };
     this.emitter = new EventEmitter();
+  }
+
+  componentDidMount() {
     this.emitter.on('init-done', () => this.onInitDone());
+  }
+
+  componentWillUnmount() {
+    this.emitter.removeAllListeners('init-done');
   }
 
   render() {

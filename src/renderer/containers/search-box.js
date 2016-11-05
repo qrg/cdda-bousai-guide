@@ -16,12 +16,6 @@ export default class SearchBox extends React.Component {
       results: [],
       searchTime: 0
     };
-
-    ipc.on('reply-search', (...args) => this.onReplySearch(...args));
-    this.props.emitter.on('app:send-search-term', debounce(
-      (...args) => this.onSendSearchTerm(...args),
-      300
-    ));
   }
 
   static get propTypes() {
@@ -31,7 +25,18 @@ export default class SearchBox extends React.Component {
   }
 
   componentDidMount() {
+    ipc.on('reply-search', (...args) => this.onReplySearch(...args));
+    this.props.emitter.on('send-search-term', debounce(
+      (...args) => this.onSendSearchTerm(...args),
+      300
+    ));
+
     this.refs['bar'].refs['input'].focus();
+  }
+
+  componentWillUnmount() {
+    ipc.removeAllListeners('reply-search');
+    this.props.emitter.removeAllListeners('send-search-term');
   }
 
   render() {

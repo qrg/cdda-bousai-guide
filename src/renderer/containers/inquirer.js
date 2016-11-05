@@ -56,7 +56,7 @@ export default class Inquirer extends React.Component {
     };
   }
 
-  componentWillMount() {
+  componentDidMount() {
     ipc.on('reply-config-status', (...args) => this.onReplyConfigStatus(...args));
     ipc.on('info', (...args) => this.onInfo(...args));
     ipc.on('error', (...args) => this.onError(...args));
@@ -83,7 +83,6 @@ export default class Inquirer extends React.Component {
     this.props.emitter.on('inquiry-back', () => this.onInquiryBack());
     this.props.emitter.on('lang-selected', (...args) => this.onLangSelected(...args));
 
-  componentDidMount() {
     wait(1000).then(() => {
       ipc.send('request-config-status');
     });
