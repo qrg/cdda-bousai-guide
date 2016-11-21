@@ -6,6 +6,7 @@ import {ipcMain as ipc} from 'electron';
 
 import logger from './logger';
 import {isString} from '../lib/string';
+import {camelToSnake} from '../lib/string';
 import {
   CONFIG_JSON,
   getJsonDir,
@@ -43,38 +44,41 @@ export default class Config extends Store {
     ipc.on('request-exe-path-validation', Config.onRequestExePathValidation);
     ipc.on('request-lang-list', (...args) => this.onRequestLangList(...args));
     ipc.on('request-save-config', (...args) => this.onRequestSaveConfig(...args));
+    ipc.on('request-preferences', (...args) => this.onRequestPreferences(...args));
   }
 
-  validate(key) {
-    const val = this.get(key);
-    return (val !== '' && val !== null && typeof val !== 'undefined');
+  async readLangList(exePath) {
+    const baseDir = getCDDARootPathByExePath(exePath);
+    const moDir = getMoDir(baseDir);
+    const dirs = await readLangDirList(moDir);
+    const langs = dirs.map(dir => basename(dir));
+    langs.unshift('en');
+    return langs;
   }
 
   async onRequestLangList(event, exePath) {
     const channel = 'reply-lang-list';
     try {
-      const baseDir = getCDDARootPathByExePath(exePath);
-      const moDir = getMoDir(baseDir);
+      const langs = await this.readLangList(exePath);
       const defaultValue = this.get('lang');
-      const dirs = await readLangDirList(moDir);
-      const langs = dirs.map(dir => basename(dir));
-      langs.unshift('en');
-      event.sender.send(channel, null, {langs, defaultValue});
+      event.sender.send(channel, {langs, defaultValue});
     } catch (e) {
       logger.error(e);
-      event.sender.send(channel, e, null);
     }
   }
 
-  async onRequestSaveConfig(event, values) {
+  async onRequestSaveConfig(event, conf) {
     const channel = 'reply-save-config';
     const {sender} = event;
     try {
-      const [exe_path, lang] = values;
-      const baseDir = getCDDARootPathByExePath(exe_path);
 
-      this.set('exe_path', exe_path);
-      this.set('lang', lang);
+      Object.keys(conf).forEach(k => {
+        console.log(camelToSnake(k), conf[k]);
+        this.set(camelToSnake(k), conf[k]);
+      });
+
+      const baseDir = getCDDARootPathByExePath(this.get('exe_path'));
+
       this.set('mo_dir', getMoDir(baseDir));
       this.set('json_dir', getJsonDir(baseDir));
 
@@ -108,18 +112,38 @@ export default class Config extends Store {
     sender.send(channel, null, {isFulfilled: true});
   }
 
+  async onRequestPreferences(event) {
+    const channel = 'reply-preferences';
+    const {sender} = event;
+    const langs = await this.readLangList(this.get('exe_path'));
+    const data = {
+      lang: this.get('lang'),
+      langs: langs,
+      exePath: this.get('exe_path'),
+      indexIgnoreKeys: this.get('index_ignore_keys')
+    };
+
+    sender.send(channel, data);
+  }
+
   static async onRequestExePathValidation(event, exePath) {
     const channel = 'reply-exe-path-validation';
+    const {sender} = event;
+    if (!isString(exePath)) {
+      logger.error('path must be String', exePath);
+    }
     try {
-      if (!isString(exePath)) {
-        logger.error('path must be String');
-      }
-      const errMsgs = await validateExePath(exePath);
-      event.sender.send(channel, null, {errMsgs, exePath});
+      const errors = await validateExePath(exePath);
+      errors.forEach(m => logger.info(m));
+      sender.send(channel, {errors, exePath});
     } catch (e) {
       logger.error(e);
-      event.sender.send(channel, e, null);
     }
+  }
+
+  validate(key) {
+    const val = this.get(key);
+    return (val !== '' && val !== null && typeof val !== 'undefined');
   }
 
 }

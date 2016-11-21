@@ -27,3 +27,7 @@ export function includes(term, target) {
     return includes(term, val); // recursive
   });
 }
+
+export function camelToSnake(str) {
+  return str.replace(/[A-Z]/g, (s) => `_${s.toLowerCase()}`);
+}

@@ -4,6 +4,7 @@ import {EventEmitter} from 'events';
 import {ipcRenderer as ipc} from 'electron';
 import React, {PropTypes} from 'react';
 import debounce from 'lodash.debounce';
+import TitleBar from '../components/titlebar';
 import SearchBar from '../components/search-bar';
 import SearchResults from '../components/search-results';
 
@@ -52,14 +53,17 @@ export default class SearchBox extends React.Component {
     };
 
     return (
-      <main className='search-box'>
-        <section className="section">
-          <div className="container">
-            <SearchBar {...barProps} />
-            <SearchResults {...resultsProps} />
-          </div>
-        </section>
-      </main>
+      <div className='search-box-container'>
+        <TitleBar />
+        <main className='search-box'>
+          <section className="section">
+            <div className="container">
+              <SearchBar {...barProps} />
+              <SearchResults {...resultsProps} />
+            </div>
+          </section>
+        </main>
+      </div>
     );
   }
 

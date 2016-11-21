@@ -21,30 +21,44 @@ export default class Store extends EventEmitter {
 
   beforeInitialSave() {}
 
-  async initialize() {
+  async initialize(options) {
+
+    const params = {
+      rebuild: false,
+      ...options
+    };
+
+    if (params.rebuild) {
+      await this._loadToSave();
+      return;
+    }
+
     try {
-      await this.beforeInitialLoad();
-      await this.load();
-      this.emit('init-done');
-
+      await this._loadToInitialize();
     } catch (e) {
-
       if (e.code !== 'ENOENT' && e.code !== 'VERSION_CONFLICT') {
         logger.error(`${this.storeName} initializing failed.`);
         logger.error(e);
         return;
       }
+      await this._loadToSave();
+    }
+  }
 
-      logger.info(`Creating new ${this.storeName}...`, this.filePath);
+  async _loadToInitialize() {
+    await this.beforeInitialLoad();
+    await this.load();
+    this.emit('init-done');
+  }
 
-      try {
-        await this.beforeInitialSave();
-        await this.save();
-        this.emit('init-done');
-      } catch (e) {
-        logger.error(e);
-      }
-
+  async _loadToSave() {
+    logger.info(`Creating new ${this.storeName}...`, this.filePath);
+    try {
+      await this.beforeInitialSave();
+      await this.save();
+      this.emit('init-done');
+    } catch (e) {
+      logger.error(e);
     }
   }
 
@@ -106,7 +120,7 @@ export default class Store extends EventEmitter {
   }
 
   save() {
-    logger.info(`Saving ${this.filePath} ...`);
+    logger.log(`Saving ${this.filePath} ...`);
 
     return new Promise((done, reject) => {
       const output = {

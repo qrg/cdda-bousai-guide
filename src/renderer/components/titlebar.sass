@@ -1,0 +1,42 @@
+@charset "utf-8"
+
+@import "../styles/utilities/variables"
+
+.titlebar
+  position: fixed
+  top: 0
+  width: 100vw
+  min-height: $titlebar-height
+  background-color: inherit
+  -webkit-user-select: none
+  -webkit-app-region: drag
+  z-index: 1
+
+  + *
+    margin-top: $titlebar-height
+
+  .titlebar-body
+    display: flex
+    justify-content: space-between
+    padding-top: 8px
+    padding-right: 8px
+    padding-bottom: 8px
+    padding-left: 64px
+
+    > *
+      color: $grey
+
+    .title
+      width: 100%
+      margin-bottom: 0
+      padding-right: 8px
+      padding-left: 8px
+      padding-top: 6px
+      font-size: $size-normal
+      font-weight: bold
+      text-align: center
+
+    .close
+      cursor: pointer
+      background-color: transparent
+      border: none

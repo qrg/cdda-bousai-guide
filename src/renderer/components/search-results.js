@@ -75,7 +75,6 @@ export default class SearchResults extends React.Component {
   }
 
   render() {
-    console.log(this.props);
     const {results, searchTime} = this.props;
     const summary = results.length > 0 ? `${results.length} items, ${searchTime} ms` : '';
 

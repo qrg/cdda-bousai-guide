@@ -9,7 +9,7 @@ import {
 import logger from './logger';
 
 const INDEX_HTML = `file://${__dirname}/../renderer/index.html`;
-const INITIAL_BG_COLOR = '#323b4b'; // display until finishing apply stylesheet
+const INITIAL_BG_COLOR = '#2A535E'; // display until finishing apply stylesheet
 
 export default class PrimaryWindow {
 
@@ -21,8 +21,11 @@ export default class PrimaryWindow {
       y: this.config.get('window_y'),
       width: this.config.get('window_width'),
       height: this.config.get('window_height'),
+      minWidth: 320,
+      minHeight: 568,
       backgroundColor: INITIAL_BG_COLOR,
-      title: `${PRODUCT_NAME} ${VERSION}`
+      title: `${PRODUCT_NAME} ${VERSION}`,
+      titleBarStyle: 'hidden-inset'
     });
 
     this.window.once('ready-to-show', () => this.onReadyToShow());
@@ -30,6 +33,10 @@ export default class PrimaryWindow {
     this.window.on('move', debounce(() => this.onMove(), 300));
     this.window.on('resize', debounce(() => this.onResize(), 300));
     this.window.loadURL(INDEX_HTML);
+
+    if (process.platform !== 'darwin') {
+      this.window.setAutoHideMenuBar(true);
+    }
   }
 
   onReadyToShow() {

@@ -2,7 +2,7 @@
 
 import {app, Menu} from 'electron';
 
-export default function () {
+export default function (mainWindow) {
   const template = [
     {
       label: 'Edit',
@@ -39,6 +39,16 @@ export default function () {
       ]
     },
     {
+      label: 'Tools',
+      submenu: [
+        {
+          label: 'Preferences',
+          accelerator: 'Ctrl+,',
+          click: () => mainWindow.window.webContents.send('open-preferences'),
+        }
+      ]
+    },
+    {
       role: 'window',
       submenu: [
         {role: 'minimize'},
@@ -48,10 +58,17 @@ export default function () {
   ];
 
   if (process.platform === 'darwin') {
+    template.splice(3, 1);
     template.unshift({
       label: app.getName(),
       submenu: [
         {role: 'about'},
+        {type: 'separator'},
+        {
+          label: 'Preferences',
+          accelerator: 'Command+,',
+          click: () => mainWindow.window.webContents.send('open-preferences'),
+        },
         {type: 'separator'},
         {role: 'services', submenu: []},
         {type: 'separator'},

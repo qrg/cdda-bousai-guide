@@ -3,66 +3,66 @@
 import React, {Component, PropTypes} from 'react';
 import {EventEmitter} from 'events';
 import classNames from 'classnames';
+import {ipcRenderer as ipc} from 'electron';
 
 export default class LangField extends Component {
 
   constructor(props) {
     super(props);
+    this.state = {
+      value: props.defaultValue
+    };
     this.onChange = this.onChange.bind(this);
-    this.onClickBack = this.onClickBack.bind(this);
-    this.onClickNext = this.onClickNext.bind(this);
-    this.selected = this.props.defaultValue;
   }
 
   static get propTypes() {
     return {
-      emitter: PropTypes.instanceOf(EventEmitter).isRequired,
-      langs: PropTypes.array.isRequired,
-      defaultValue: PropTypes.string.isRequired,
-      isBusy: PropTypes.bool.isRequired
+      emitter: PropTypes.instanceOf(EventEmitter),
+      exePath: PropTypes.string.isRequired,
+      langs: PropTypes.array,
+      defaultValue: PropTypes.string,
+      isBusy: PropTypes.bool,
+      size: PropTypes.string,
+      onChange: PropTypes.func
     };
   }
 
-  componentDidMount() {
-    if (this.props.langs.length === 0) {
-      this.props.emitter.emit('request-lang-list');
-    }
+  static get defaultProps() {
+    return {
+      emitter: new EventEmitter(),
+      langs: [],
+      defaultValue: 'en',
+      isBusy: true,
+      size: 'normal'
+    };
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.setState({value: nextProps.defaultValue});
   }
 
   onChange(e) {
-    this.selected = e.target.value;
-  }
-
-  onClickBack() {
-    this.props.emitter.emit('inquiry-back');
-  }
-
-  onClickNext() {
-    this.props.emitter.emit('lang-selected', this.selected);
+    const value = e.target.value;
+    this.setState({value: value});
+    this.props.onChange(value);
   }
 
   render() {
+    const {langs, isBusy, size} = this.props;
+    const {value} = this.state;
+
     const controlClass = classNames({
       'control': true,
-      'is-loading': this.props.isBusy || this.props.langs.length < 1
+      'is-loading': isBusy || langs.length < 1
     });
+
     const selectClass = classNames({
       'select': true,
-      'is-medium': true,
-      'is-disabled': this.props.isBusy || this.props.langs.length < 1
+      [`is-${size}`]: true,
+      'is-disabled': isBusy || langs.length < 1
     });
-    const buttonClassDefault = {
-      'button': true,
-      'is-large': true,
-      'is-outlined': true,
-      'is-black': true
-    };
-    const backButtonClass = classNames(buttonClassDefault);
-    const nextButtonClass = classNames({
-      ...buttonClassDefault,
-      'is-disabled': this.props.isBusy || this.props.langs.length < 1
-    });
-    const langOptions = this.props.langs.map((lang, i) => {
+
+    const langOptions = langs.map((lang, i) => {
       return <option {...{key: i, value: lang}}>{lang}</option>;
     });
 
@@ -72,34 +72,13 @@ export default class LangField extends Component {
 
     return (
       <section className='lang-field'>
-
-        <section className="section">
-          <h1>Select Language.</h1>
-          <p className={controlClass}>
+        <p className={controlClass}>
             <span className={selectClass}>
-              <select onChange={this.onChange} defaultValue={this.props.defaultValue}>
+              <select onChange={this.onChange} value={value}>
                 {langOptions}
               </select>
             </span>
-          </p>
-        </section>
-
-        <nav className='control is-grouped'>
-          <p className='control'>
-            <button onClick={this.onClickBack} className={backButtonClass}>
-              <i className='fa fa-chevron-left fa-pull-left' aria-hidden={true}></i>
-              <span>Back</span>
-            </button>
-          </p>
-
-          <p className='control'>
-            <button onClick={this.onClickNext} className={nextButtonClass}>
-              <span>Next</span>
-              <i className='fa fa-chevron-right fa-pull-right' aria-hidden={true}></i>
-            </button>
-          </p>
-        </nav>
-
+        </p>
       </section>
     );
   }

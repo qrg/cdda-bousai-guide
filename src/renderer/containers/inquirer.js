@@ -1,18 +1,28 @@
 'use strict';
 
 import {EventEmitter} from 'events';
+import {ipcRenderer as ipc} from 'electron';
 import React, {PropTypes} from 'react';
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
+import classNames from 'classnames';
 import throttle from 'lodash.throttle';
+import TitleBar from '../components/titlebar';
 import Title from '../components/title';
 import ExePathField from '../components/exe-path-field';
 import LangField from '../components/lang-field';
-import ProgressBar from '../components/progress-bar';
-
-import {ipcRenderer as ipc, remote} from 'electron';
+import BuildIndicator from '../components/build-indicator';
+import ErrorList from '../components/error-list';
 import wait from '../../lib/wait';
 
-const {showOpenDialog} = remote.dialog;
+const THROTTLE_WAIT = 300;
+const THROTTLE_OPTIONS = {leading: true, trailing: true};
+
+const STEP_TRANSITIONS = {
+  component: 'div',
+  transitionName: 'step',
+  transitionEnterTimeout: 600,
+  transitionLeaveTimeout: 600
+};
 
 export default class Inquirer extends React.Component {
 
@@ -20,34 +30,52 @@ export default class Inquirer extends React.Component {
     super(props);
     this.state = {
       step: 1,
-      exePathField: {
-        errors: [],
-        isBusy: false
-      },
-      langField: {
-        langs: [],
-        defaultValue: '',
-        isBusy: true
-      },
       indicatorMessage: '',
-      items: {
-        inProgress: false,
-        max: 0,
-        value: 0,
-        rate: 0
-      },
-      indexer: {
-        inProgress: false,
-        max: 0,
-        value: 0,
-        rate: 0
-      }
+      exePathFieldIsBusy: false,
+      exePathErrors: [],
+      langs: [],
+      langsDefaultValue: '',
+      langFieldIsBusy: true,
+      isItemsInProgress: false,
+      itemsMax: 0,
+      itemsValue: 0,
+      isIndexerInProgress: false,
+      indexerMax: 0,
+      indexerValue: 0
     };
 
-    this.config = new Map([
-      ['exe_path', ''],
-      ['lang', '']
-    ]);
+    this.config = {
+      exePath: '',
+      lang: ''
+    };
+
+    this.onReplyConfigStatus = this.onReplyConfigStatus.bind(this);
+    this.onInfo = this.onInfo.bind(this);
+    this.onError = this.onError.bind(this);
+    this.onClickBack = this.onClickBack.bind(this);
+    this.onClickNext = this.onClickNext.bind(this);
+    this.onClickLast = this.onClickLast.bind(this);
+    this.onReplyExePathValidation = this.onReplyExePathValidation.bind(this);
+    this.onExePathSelect = this.onExePathSelect.bind(this);
+    this.onReplyLangList = this.onReplyLangList.bind(this);
+    this.onLangChange = this.onLangChange.bind(this);
+    this.onItemsBuildStart = this.onItemsBuildStart.bind(this);
+    this.onItemsBuildProgress = this.onItemsBuildProgress.bind(this);
+    this.onItemsBuildDone = this.onItemsBuildDone.bind(this);
+    this.onIndexerBuildStart = this.onIndexerBuildStart.bind(this);
+    this.onIndexerBuildProgress = this.onIndexerBuildProgress.bind(this);
+    this.onIndexerBuildDone = this.onIndexerBuildDone.bind(this);
+    this.onIndexerInitDone = this.onIndexerInitDone.bind(this);
+    this.onReplySaveConfig = this.onReplySaveConfig.bind(this);
+    this.onInquiryBack = this.onInquiryBack.bind(this);
+
+    this.throttledItemsBuildProgress = throttle(
+      this.onItemsBuildProgress, THROTTLE_WAIT, THROTTLE_OPTIONS
+    );
+    this.throttledIndexerBuildProgress = throttle(
+      this.onIndexerBuildProgress, THROTTLE_WAIT, THROTTLE_OPTIONS
+    );
+
   }
 
   static get propTypes() {
@@ -57,31 +85,20 @@ export default class Inquirer extends React.Component {
   }
 
   componentDidMount() {
-    ipc.on('reply-config-status', (...args) => this.onReplyConfigStatus(...args));
-    ipc.on('info', (...args) => this.onInfo(...args));
-    ipc.on('error', (...args) => this.onError(...args));
-    ipc.on('items-build-start', (...args) => this.onItemsBuildStart(...args));
-    ipc.on('items-build-progress',
-      throttle((...args) => {
-        return this.onItemsBuildProgress(...args);
-      }, 500, {leading: false, trailing: true})
-    );
-    ipc.on('items-build-done', (...args) => this.onItemsBuildDone(...args));
-    ipc.on('indexer-build-start', (...args) => this.onIndexerBuildStart(...args));
-    ipc.on('indexer-build-progress',
-      throttle((...args) => {
-        return this.onIndexerBuildProgress(...args);
-      }, 500, {leading: false, trailing: true})
-    );
-    ipc.on('indexer-build-done', (...args) => this.onIndexerBuildDone(...args));
-    ipc.on('indexer-init-done', (...args) => this.onIndexerInitDone(...args));
-    ipc.on('reply-exe-path-validation', (...args) => this.onReplyExePathValidation(...args));
-    ipc.on('reply-lang-list', (...args) => this.onReplyLangList(...args));
-    ipc.on('reply-save-config', (...args) => this.onReplySaveConfig(...args));
-    this.props.emitter.on('request-open-dialog-exe-path', () => this.onRequestOpenDialogExePath());
-    this.props.emitter.on('request-lang-list', () => this.onRequestLangList());
-    this.props.emitter.on('inquiry-back', () => this.onInquiryBack());
-    this.props.emitter.on('lang-selected', (...args) => this.onLangSelected(...args));
+    ipc.on('reply-config-status', this.onReplyConfigStatus);
+    ipc.on('info', this.onInfo);
+    ipc.on('error', this.onError);
+    ipc.on('reply-exe-path-validation', this.onReplyExePathValidation);
+    ipc.on('reply-lang-list', this.onReplyLangList);
+    ipc.on('items-build-start', this.onItemsBuildStart);
+    ipc.on('items-build-progress', this.throttledItemsBuildProgress);
+    ipc.on('items-build-done', this.onItemsBuildDone);
+    ipc.on('indexer-build-start', this.onIndexerBuildStart);
+    ipc.on('indexer-build-progress', this.throttledIndexerBuildProgress);
+    ipc.on('indexer-build-done', this.onIndexerBuildDone);
+    ipc.on('indexer-init-done', this.onIndexerInitDone);
+    ipc.on('reply-save-config', this.onReplySaveConfig);
+    this.props.emitter.on('inquiry-back', this.onInquiryBack);
 
     wait(1000).then(() => {
       ipc.send('request-config-status');
@@ -89,23 +106,20 @@ export default class Inquirer extends React.Component {
   }
 
   componentWillUnmount() {
-    ipc.removeAllListeners('reply-config-status');
-    ipc.removeAllListeners('info');
-    ipc.removeAllListeners('error');
-    ipc.removeAllListeners('items-build-start');
-    ipc.removeAllListeners('items-build-progress');
-    ipc.removeAllListeners('items-build-done');
-    ipc.removeAllListeners('indexer-build-start');
-    ipc.removeAllListeners('indexer-build-progress');
-    ipc.removeAllListeners('indexer-build-done');
-    ipc.removeAllListeners('indexer-init-done');
-    ipc.removeAllListeners('reply-exe-path-validation');
-    ipc.removeAllListeners('reply-lang-list');
-    ipc.removeAllListeners('reply-save-config');
-    this.props.emitter.removeAllListeners('request-open-dialog-exe-path');
-    this.props.emitter.removeAllListeners('request-lang-list');
-    this.props.emitter.removeAllListeners('inquiry-back');
-    this.props.emitter.removeAllListeners('lang-selected');
+    ipc.removeListener('reply-config-status', this.onReplyConfigStatus);
+    ipc.removeListener('info', this.onInfo);
+    ipc.removeListener('error', this.onError);
+    ipc.removeListener('reply-exe-path-validation', this.onReplyExePathValidation);
+    ipc.removeListener('reply-lang-list', this.onReplyLangList);
+    ipc.removeListener('items-build-start', this.onItemsBuildStart);
+    ipc.removeListener('items-build-progress', this.throttledItemsBuildProgress);
+    ipc.removeListener('items-build-done', this.onItemsBuildDone);
+    ipc.removeListener('indexer-build-start', this.onIndexerBuildStart);
+    ipc.removeListener('indexer-build-progress', this.throttledIndexerBuildProgress);
+    ipc.removeListener('indexer-build-done', this.onIndexerBuildDone);
+    ipc.removeListener('indexer-init-done', this.onIndexerInitDone);
+    ipc.removeListener('reply-save-config', this.onReplySaveConfig);
+    this.props.emitter.removeListener('inquiry-back', this.onInquiryBack);
   }
 
   stepNext() {
@@ -114,33 +128,6 @@ export default class Inquirer extends React.Component {
 
   stepPrevious() {
     this.setState({step: this.state.step - 1});
-  }
-
-  onRequestOpenDialogExePath() {
-    this.setStateDeep('exePathField', {isBusy: true});
-
-    showOpenDialog({properties: ['openFile']}, (paths) => {
-      if (!paths) { // dialog is canceled
-        this.setStateDeep('exePathField', {isBusy: false});
-        return;
-      }
-      if (paths.length >= 1) {
-        this.setStateDeep('exePathField', {
-          errors: [],
-          isBusy: true
-        });
-        ipc.send('request-exe-path-validation', paths[0]);
-        return;
-      }
-      this.setStateDeep('exePathField', {
-        errors: ['Path is not correct.'],
-        isBusy: false
-      });
-    });
-  }
-
-  setStateDeep(key, state) {
-    this.setState({[key]: {...this.state[key], ...state}});
   }
 
   requestInitItems() {
@@ -159,39 +146,51 @@ export default class Inquirer extends React.Component {
     this.setState({indicatorMessage: args.join('\n')});
   }
 
-  onReplyExePathValidation(event, err, {errMsgs, exePath}) {
-    if (err) {
-      console.error(err);
+  onReplyExePathValidation(event, {errors, exePath}) {
+    this.setState({exePathFieldIsBusy: false});
+    if (errors.length >= 1) {
+      this.setState({exePathErrors: errors});
       return;
     }
-    this.setStateDeep('exePathField', {isBusy: false});
-    if (errMsgs.length === 0) {
-      this.config.set('exe_path', exePath);
-      this.stepNext();
-      return;
-    }
-    errMsgs.forEach(err => console.error(err));
-    this.setStateDeep('exePathField', {errors: errMsgs});
+    this.config.exePath = exePath;
+    this.setState({langFieldIsBusy: true});
+    ipc.send('request-lang-list', this.config.exePath);
+    this.stepNext();
   }
 
-  onReplyLangList(event, err, {langs, defaultValue}) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-    this.setStateDeep('langField', {
-      langs,
-      defaultValue,
-      isBusy: false
+  onExePathSelect(paths) {
+    this.setState({exePathErrors: [], exePathFieldIsBusy: true});
+    ipc.send('request-exe-path-validation', paths[0]);
+  }
+
+  onReplyLangList(event, {langs, defaultValue}) {
+    this.setState({
+      langs: langs,
+      langsDefaultValue: defaultValue,
+      langFieldIsBusy: false
     });
+    this.config.lang = defaultValue;
   }
 
-  onReplySaveConfig(event, err, {file, data}) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-    console.log(file, data);
+  onLangChange(selected) {
+    console.log(selected);
+    this.config.lang = selected;
+  }
+
+  onClickBack() {
+    this.stepPrevious();
+  }
+
+  onClickNext() {
+    this.stepNext();
+  }
+
+  async onClickLast() {
+    this.setState({step: 1});
+    await wait(600);
+    ipc.send('request-save-config', this.config);
+    await wait(600);
+    this.requestInitItems();
   }
 
   onReplyConfigStatus(event, err, {isFulfilled}) {
@@ -207,16 +206,12 @@ export default class Inquirer extends React.Component {
     this.requestInitItems();
   }
 
-  onRequestLangList() {
-    this.setStateDeep('langField', {isBusy: true});
-    ipc.send('request-lang-list', this.config.get('exe_path'));
-  }
-
-  onLangSelected(selected) {
-    this.config.set('lang', selected);
-    ipc.send('request-save-config', [...this.config.values()]);
-    this.setState({step: 1});
-    this.requestInitItems();
+  onReplySaveConfig(event, err, {file, data}) {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    console.log(file, data);
   }
 
   onInquiryBack() {
@@ -225,7 +220,7 @@ export default class Inquirer extends React.Component {
 
   onItemsBuildStart() {
     wait(600).then(() => {
-      this.setStateDeep('items', {inProgress: true});
+      this.setState({isItemsInProgress: true});
     });
   }
 
@@ -234,40 +229,36 @@ export default class Inquirer extends React.Component {
       console.error(err);
       return;
     }
-    const {max, value, rate} = state;
-    this.setStateDeep('items', {
-      max: max,
-      value: value,
-      rate: rate
+    const {max, value} = state;
+    this.setState({
+      itemsMax: max,
+      itemsValue: value
     });
   }
 
-  onItemsBuildDone() {
-    this.setStateDeep('items', {inProgress: false});
+  async onItemsBuildDone() {
+    this.setState({isItemsInProgress: false});
+    await wait(1000);
+    this.setState({isIndexerInProgress: true});
   }
 
-  onIndexerBuildStart() {
-    wait(600).then(() => {
-      this.setStateDeep('indexer', {inProgress: true});
-    });
-  }
+  onIndexerBuildStart() {}
 
   onIndexerBuildProgress(event, err, state) {
     if (err) {
       console.error(err);
       return;
     }
-    const {max, value, rate} = state;
-    this.setStateDeep('indexer', {
-      max: max,
-      value: value,
-      rate: rate
+    const {max, value} = state;
+    this.setState({
+      indexerMax: max,
+      indexerValue: value
     });
   }
 
   onIndexerBuildDone() {
     wait(600).then(() => {
-      this.setStateDeep('indexer', {inProgress: false});
+      this.setState({isIndexerInProgress: false});
     });
   }
 
@@ -277,83 +268,113 @@ export default class Inquirer extends React.Component {
     });
   }
 
-  renderIndicator() {
-    const {items, indexer, indicatorMessage} = this.state;
-    const transitions = {
-      transitionName: 'progress',
-      transitionAppear: true,
-      transitionAppearTimeout: 600,
-      transitionEnterTimeout: 600,
-      transitionLeaveTimeout: 600
-    };
-
-    const renderProgressIfActive = () => {
-      return [items, indexer]
-        .filter(e => e.inProgress)
-        .map((e, i) => {
-          const {max, value, rate} = e;
-          return (
-            <ProgressBar
-              max={max}
-              value={value}
-              rate={rate}
-              key={i}
-            ></ProgressBar>
-          );
-        });
-    };
-
-    return (
-      <section className='init-indicator'>
-        <p className='spinner has-text-center'>
-          <span className='loader' aria-hidden={true}></span>
-        </p>
-        <ReactCSSTransitionGroup {...transitions}>
-          {renderProgressIfActive()}
-        </ReactCSSTransitionGroup>
-        <p className='log'>{indicatorMessage}</p>
-
-      </section>
-    );
-  }
-
   renderStep() {
-    const transitions = {
-      transitionName: 'step',
-      transitionAppear: true,
-      transitionAppearTimeout: 600,
-      transitionEnterTimeout: 600,
-      transitionLeaveTimeout: 600
+    const {emitter} = this.props;
+    const {
+      step,
+      indicatorMessage,
+      isItemsInProgress,
+      itemsMax,
+      itemsValue,
+      isIndexerInProgress,
+      indexerMax,
+      indexerValue,
+      exePathFieldIsBusy,
+      exePathErrors,
+      langs,
+      langsDefaultValue,
+      langFieldIsBusy
+    } = this.state;
+
+    const buttonClassDefault = {
+      'button': true,
+      'is-large': true,
+      'is-outlined': true,
+      'is-black': true
     };
 
-    switch (this.state.step) {
+    const backButtonClass = classNames(buttonClassDefault);
+    const lastButtonClass = classNames({
+      ...buttonClassDefault,
+      'is-disabled': langFieldIsBusy
+    });
+
+    const indicatorProps = {
+      message: indicatorMessage,
+      isItemsInProgress: isItemsInProgress,
+      itemsMax: itemsMax,
+      itemsValue: itemsValue,
+      isIndexerInProgress: isIndexerInProgress,
+      indexerMax: indexerMax,
+      indexerValue: indexerValue
+    };
+
+    const exePathFieldProps = {
+      emitter: emitter,
+      isBusy: exePathFieldIsBusy,
+      onDialogOpen: () => this.setState({exePathFieldIsBusy: true}),
+      onDialogCancel: () => this.setState({exePathFieldIsBusy: false}),
+      onDialogSelect: this.onExePathSelect,
+      buttonSize: 'large'
+    };
+
+    const langFieldProps = {
+      emitter: emitter,
+      exePath: this.config.exePath,
+      langs: langs,
+      defaultValue: langsDefaultValue,
+      isBusy: langFieldIsBusy,
+      size: 'medium',
+      onChange: this.onLangChange
+    };
+
+    switch (step) {
       case 1:
         return (
-          <span>
-            <div className='title-screen' key={this.state.step}>
+          <ReactCSSTransitionGroup {...STEP_TRANSITIONS}>
+            <div className='title-screen' key={step}>
               <Title />
-              {this.renderIndicator()}
+              <BuildIndicator {...indicatorProps} />
             </div>
-          </span>
+          </ReactCSSTransitionGroup>
         );
       case 2:
         return (
-          <ReactCSSTransitionGroup {...transitions}>
-            <ExePathField
-              key={this.state.step}
-              emitter={this.props.emitter}
-              {...this.state.exePathField}
-            />
+          <ReactCSSTransitionGroup {...STEP_TRANSITIONS}>
+            <div className='exe-path-field-container' key={step}>
+              <h1>Select CDDA executable.</h1>
+              <ExePathField {...exePathFieldProps} />
+              <div className='errors'>
+                <ErrorList errors={exePathErrors} />
+              </div>
+              <section className='examples'>
+                <h6>Examples</h6>
+                <ul className='help is-black'>
+                  <li>cataclysmdda\0.C\cataclysm-tiles.exe</li>
+                  <li>~/Application/Cataclysm.app</li>
+                  <li>~/cataclysmdda/0.C/cataclysm-launcher</li>
+                </ul>
+              </section>
+            </div>
           </ReactCSSTransitionGroup>
         );
       case 3:
         return (
-          <ReactCSSTransitionGroup {...transitions}>
-            <LangField
-              key={this.state.step}
-              emitter={this.props.emitter}
-              {...this.state.langField}
-            />
+          <ReactCSSTransitionGroup {...STEP_TRANSITIONS}>
+            <div className='lang-field-container' key={step}>
+              <h1>Select Language.</h1>
+              <LangField {...langFieldProps} />
+              <nav className='step-control'>
+                <button onClick={this.onClickBack} className={backButtonClass}>
+                  <i className='fa fa-chevron-left fa-pull-left' aria-hidden={true}></i>
+                  <span>Back</span>
+                </button>
+                <button onClick={this.onClickLast} className={lastButtonClass}>
+                  <span>Next</span>
+                  <i className='fa fa-chevron-right fa-pull-right' aria-hidden={true}></i>
+                </button>
+              </nav>
+            </div>
           </ReactCSSTransitionGroup>
         );
     }
@@ -362,11 +383,12 @@ export default class Inquirer extends React.Component {
   render() {
     return (
       <div className='inquirer'>
-        <div className='inquirer-body'>
-          <main className='content has-text-centered'>
+        <TitleBar />
+        <main className='inquirer-body'>
+          <div className='content'>
             {this.renderStep()}
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
     );
   }

@@ -1,6 +1,6 @@
 'use strict';
 
-import React from 'react';
+import React, {PropTypes} from 'react';
 
 export default class ErrorList extends React.Component {
 
@@ -10,14 +10,15 @@ export default class ErrorList extends React.Component {
 
   static get propTypes() {
     return {
-      errors: React.PropTypes.array
+      errors: PropTypes.array,
+      classNames: PropTypes.string
     };
   }
 
   render() {
     const errors = this.props.errors.map((err, i) => <li key={i}>{err}</li>);
     return (
-      <ul className='help is-danger'>
+      <ul className={this.props.classNames}>
         {errors}
       </ul>
     );

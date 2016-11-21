@@ -53,15 +53,15 @@ export function hasMoDir(path) {
 }
 
 export async function validateExePath(exePath) {
-  const errMsgs = [];
+  const errors = [];
   const baseDir = getCDDARootPathByExePath(exePath);
   const hasJson = await hasJsonDir(baseDir);
   const hasMo = await hasMoDir(baseDir);
 
-  if (!hasJson) errMsgs.push(`${getJsonDir(baseDir)} is not readable or it does not exist.`);
-  if (!hasMo) errMsgs.push(`${getMoDir(baseDir)} is not readable or it does not exist.`);
+  if (!hasJson) errors.push(`${getJsonDir(baseDir)} does not exist or not readable.`);
+  if (!hasMo) errors.push(`${getMoDir(baseDir)} does not exist or not readable.`);
 
-  return errMsgs;
+  return errors;
 }
 
 export function readLangDirList(moDir) {

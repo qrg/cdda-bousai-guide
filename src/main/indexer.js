@@ -66,7 +66,6 @@ export default class Indexer extends Store {
           this.emit('build-progress', null, {
             max: max,
             value: count,
-            rate: Math.round(count / max * 100)
           });
 
           wait(BUILD_INTERVAL_MS).then(() => done());

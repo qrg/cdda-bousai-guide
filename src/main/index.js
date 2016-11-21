@@ -1,15 +1,15 @@
 'use strict';
 
-import {app, ipcMain as ipc} from 'electron';
-
+import {app, ipcMain as ipc, dialog} from 'electron';
 import setAppMenu from './menu';
 import PrimaryWindow from './primary-window';
 import Config from './config';
 import Items from './items';
 import Indexer from './indexer';
 import logger from './logger';
-
 import search from './search';
+
+const {showOpenDialog} = dialog;
 
 class Main {
 
@@ -17,17 +17,18 @@ class Main {
     // initialize config -> items -> indexer
     this.config = new Config();
     this.shouldRebuildIndexer = false;
+    this.isRebuilding = false;
 
     app.on('ready', () => this.onReady());
     app.on('window-all-closed', () => this.onWindowAllClosed());
-    ipc.on('request-items-init', (event) => this.onRequestItemsInit(event));
+    ipc.on('request-items-init', (...args) => this.onRequestItemsInit(...args));
+    ipc.on('request-open-dialog', (...args) => this.onRequestOpenDialog(...args));
     ipc.on('request-search', (...args) => this.onRequestSearch(...args));
     this.config.on('init-done', () => this.onConfigInitDone());
   }
 
   onReady() {
     this.config.initialize();
-    setAppMenu();
   }
 
   onWindowAllClosed() {
@@ -43,6 +44,7 @@ class Main {
     }
 
     const contents = this.primaryWindow.window.webContents;
+    setAppMenu(this.primaryWindow);
 
     logger.on('info', (...args) => {
       contents.send('info', ...args);
@@ -53,8 +55,14 @@ class Main {
 
   }
 
-  onRequestItemsInit(event) {
+  onRequestItemsInit(event, options) {
     const {sender} = event;
+
+    if (this.isRebuilding) {
+      return;
+    }
+
+    this.isRebuilding = true;
 
     this.items = new Items({
       lang: this.config.get('lang'),
@@ -70,7 +78,11 @@ class Main {
     this.items.on('build-progress', (...args) => this.onItemsBuildProgress(sender, ...args));
     this.items.on('build-done', () => this.onItemsBuildDone(sender));
     this.items.on('init-done', (...args) => this.onItemsInitDone(sender, ...args));
-    this.items.initialize();
+    this.items.initialize(options);
+  }
+
+  onRequestOpenDialog(event, options, callback) {
+    showOpenDialog(this.primaryWindow, options, callback);
   }
 
   onItemsBuildStart(sender) {
@@ -116,13 +128,14 @@ class Main {
   }
 
   onIndexerBuildDone(sender) {
-    const channel = 'indexer-build--done';
+    const channel = 'indexer-build-done';
     sender.send(channel);
   }
 
   onIndexerInitDone(sender) {
     const channel = 'indexer-init-done';
     this.shouldRebuildIndexer = false;
+    this.isRebuilding = false;
     sender.send(channel);
   }
 

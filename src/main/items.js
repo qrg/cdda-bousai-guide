@@ -86,7 +86,6 @@ export default class Items extends Store {
               this.emit('build-progress', null, {
                 max: max,
                 value: i + 1,
-                rate: Math.round(i + 1 / max * 100)
               });
 
               wait(BUILD_INTERVAL_MS).then(() => done());

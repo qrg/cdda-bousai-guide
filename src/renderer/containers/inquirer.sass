@@ -1,5 +1,7 @@
 @import "../styles/bulma/sass/layout/hero"
 
+$inquirer-bgcolor: $warning
+
 @keyframes inquirer-fadein
   from
     opacity: 0
@@ -7,22 +9,27 @@
     opacity: 1
 
 .inquirer
-  min-height: 100vh
   position: absolute
-  top: 0
-  left: 0
+  display: flex
+  flex-direction: column
   width: 100%
-  background-color: $warning
+  background-color: $inquirer-bgcolor
   animation-name: inquirer-fadein
   animation-duration: .3s
   animation-timing-function: ease
 
+  .titlebar
+    background-color: $inquirer-bgcolor
+
   .inquirer-body
+    width: 100vw
+    flex-grow: 1
+    overflow: auto
     padding: 40px 20px
 
     .content
       position: relative
-      > span /* ReactCSSTransitionGroup insert span  */
+      > div /* ReactCSSTransitionGroup inserts a element  */
         height: calc(100vh - 80px)
         display: flex
         align-items: center
@@ -30,44 +37,59 @@
 
         > *
           position: absolute
-
-        .title-screen
-          min-height: 14rem /* avoid wobbling when toggled the progress bar  */
-
-        .lang-field
           width: 100%
+          max-width: 600px
+          text-align: center
 
-    .title
-      color: $black
-      font-weight: bold
-      font-size: 48px
-      letter-spacing: -.02em
-    .subtitle
-      margin-top: 0
-      color: $black
-      font-weight: normal
-      font-size: 14px
-      letter-spacing: .04em
+    .step-control
+      display: flex
+      justify-content: space-between
 
-    .exe-path-field
+    .title-screen
+      min-height: 14rem /* avoid wobbling when toggled the progress bar  */
+
+      .title
+        color: $black
+        font-weight: bold
+        font-size: 48px
+        letter-spacing: -.02em
+      .subtitle
+        margin-top: 0
+        color: $black
+        font-weight: normal
+        font-size: 14px
+        letter-spacing: .04em
+
+    .exe-path-field-container
+      display: flex
+      flex-direction: column
+
+      .errors
+        min-height: 8rem
+        color: $danger
       ul
+        margin: 1em 0
         list-style-type: none
-        li
-          font-family: $family-monospace
 
-    .lang-field
-      .control
-        margin: auto
-        text-align: center
-        &.is-loading
-          max-width: 14rem
-          &:after
-            border-color: transparent transparent $white $white
-          select
-            color: $grey-light
-            opacity: .6
+    .lang-field-container
+      display: flex
+      flex-direction: column
 
-    .init-indicator
+      .lang-field
+        margin-bottom: 24px
+
+        .control
+          margin: auto
+          text-align: center
+          &.is-loading
+            max-width: 14rem
+            &:after
+              border-color: transparent transparent $white $white
+            select
+              color: $grey-light
+              opacity: .6
+
+    .build-indicator
       position: relative
       .spinner
         margin-top: 40px
@@ -105,20 +127,26 @@
     opacity: 0
     transform: translateY(-24px)
 
-.step-appear,
 .step-enter
   opacity: 0
   transform: translateX(32px)
   transition: opacity .4s ease, transform .4s ease
-  &.step-appear-active,
   &.step-enter-active
+    opacity: 1
+    transform: translateX(0)
+
+//.step-appear
+  opacity: 0
+  transform: translateX(32px)
+  transition: opacity .4s ease, transform .4s ease
+  &.step-appear-active
     opacity: 1
     transform: translateX(0)
 
 .step-leave
   opacity: 1
   transform: translateX(0)
-  transition: opacity .2s ease, transform .4s ease
+  transition: opacity .1s ease, transform .4s ease
   &.step-leave-active
     opacity: 0
     transform: translateX(-24px)

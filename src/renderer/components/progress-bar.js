@@ -12,15 +12,22 @@ export default class ProgressBar extends React.Component {
     return {
       max: React.PropTypes.number.isRequired,
       value: React.PropTypes.number.isRequired,
-      rate: React.PropTypes.number.isRequired
+      rate: React.PropTypes.number.isRequired,
+      classNames: React.PropTypes.string
+    };
+  }
+
+  static get defaultProps() {
+    return {
+      classNames: 'progress is-small'
     };
   }
 
   render() {
-    const {value, max, rate} = this.props;
+    const {value, max, rate, classNames} = this.props;
     return (
-    <div>
-      <progress className='progress is-small' value={value} max={max}>
+    <div className='progress-bar'>
+      <progress className={classNames} value={value} max={max}>
         <span>{rate} %</span>
       </progress>
       <p className='status has-text-centered'>{value}/{max}</p>
