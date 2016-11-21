@@ -79,11 +79,11 @@
     "lodash.throttle": "^4.1.1",
     "mousetrap": "^1.6.0",
     "natural": "^0.4.0",
-    "os-locale": "^1.4.0",
     "react": "^15.3.2",
     "react-addons-css-transition-group": "^15.3.2",
     "react-dom": "^15.3.2",
     "react-modal": "^1.5.2",
+    "os-locale": "^2.0.0",
     "react-string-replace": "^0.3.4",
     "uuid": "^2.0.3",
     "react-tap-event-plugin": "^2.0.1"
