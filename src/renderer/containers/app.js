@@ -1,7 +1,6 @@
 'use strict';
 
 import {EventEmitter} from 'events';
-import {ipcRenderer as ipc} from 'electron';
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
 import React from 'react';
 import injectTapEventPlugin from 'react-tap-event-plugin';

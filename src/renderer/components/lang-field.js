@@ -3,7 +3,6 @@
 import React, {Component, PropTypes} from 'react';
 import {EventEmitter} from 'events';
 import classNames from 'classnames';
-import {ipcRenderer as ipc} from 'electron';
 
 export default class LangField extends Component {
 
