@@ -74,5 +74,8 @@ class Logger extends EventEmitter {
 
 }
 
-const logger = new Logger();
+const isDev = process.env.NODE_ENV === 'development';
+const logger = new Logger({
+  logLevel: isDev ? 'debug' : 'info'
+});
 export default logger;
