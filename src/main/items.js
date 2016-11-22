@@ -123,8 +123,8 @@ export default class Items extends Store {
     return translations;
   }
 
-  async deleteCache() {
-    return await new Promise((done, reject) => {
+  deleteCache() {
+    return new Promise((done, reject) => {
       unlink(this.cacheFile, (err) => {
         if (err) return reject(err);
         return done();
