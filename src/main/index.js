@@ -144,7 +144,7 @@ class Main {
     const channel = 'reply-search';
     const {sender} = event;
     try {
-      const {results, searchTime} = search(term, this.items, this.indexer, this.config.get('lang'));
+      const {results, searchTime} = search(term, this.items, this.indexer, this.config);
       sender.send(channel, null, {results, searchTime});
     } catch (e) {
       logger.error(e);

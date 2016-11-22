@@ -2,6 +2,8 @@
 
 import Tokenizer from './tokenizers/tokenizer';
 import logger from './logger';
+import {TfIdf} from 'natural';
+import {isString} from '../lib/string';
 
 function tokenize(term, lang) {
   const words = term.split(/\s+/);
@@ -21,21 +23,33 @@ function tokenize(term, lang) {
   return [...new Set([...tokensEn, ...tokensTr])];
 }
 
-export default function (term, items, index, lang) {
+function unifyById(prev, posting) {
+  const base = prev.findIndex(e => e.id === posting.id);
+  const dup = prev[base];
+
+  if (base === -1) {
+    return [...prev, posting];
+  }
+
+  dup.tokens = [...dup.tokens, ...posting.tokens];
+
+  return prev;
+}
+
+export default function (term, items, index, config) {
   const start = process.hrtime();
-  console.time('search-time');
 
+  const lang = config.get('lang');
+  const ignoreKeys = config.get('index_ignore_keys');
   const tokens = tokenize(term, lang);
-  const results = tokens
-    .reduce((prev, token) => { // get indexes of each tokens
-      const postingList = index.get(token);
-
-      if (!postingList) {
-        return prev;
-      }
-
-      const pl = postingList.map(p => {
-        const copied = {...p};
+  const matched = tokens
+    .map(token => [token, index.get(token)])
+    .filter(e => e[1])
+    .map(e => {
+      const token = e[0];
+      const postingList = e[1];
+      return postingList.map(posting => {
+        const copied = {...posting};
         copied.tokens = [{
           token: token,
           keys: [...copied.keys]
@@ -43,42 +57,65 @@ export default function (term, items, index, lang) {
         delete copied.keys;
         return copied;
       });
-
-      return [...prev, ...pl];
-    }, [])
-    .reduce((prev, posting) => { // unify by id
-      const base = prev.findIndex(e => e.id === posting.id);
-      const dup = prev[base];
-
-      if (base === -1) {
-        return [...prev, posting];
-      }
-
-      dup.tokens = [...dup.tokens, ...posting.tokens];
-
-      return prev;
-    }, [])
+    })
+    .reduce((prev, current) => [...prev, ...current], [])
+    .reduce(unifyById, [])
     .filter(p => {
       const keys = p.tokens.map(t => t.token);
       return tokens.every(t => keys.includes(t));
-    })
-    .sort((a, b) => {
-      if (a.tokens.length < b.tokens.length) return 1;
-      if (a.tokens.length > b.tokens.length) return -1;
-      return 0;
     });
 
-  logger.separator();
-  logger.log('search tokens: ', tokens);
-  results.forEach(e => {
-    const keys = e.tokens.map(t => t.token);
-    logger.log(keys, e.ref.translation.name);
+  const isIgnoreKey = (key) => ignoreKeys.some(keyName => keyName === key);
+  const isForScoring = (key, val) => isString(val) && !isIgnoreKey(key);
+  const docs = matched.map(e => {
+    const doc = e.ref;
+
+    const text = Object.keys(doc).reduce((prev, key) => {
+      if (key === 'translation') {
+        const translation = doc[key];
+        const t = Object.keys(translation).reduce((tPrev, tKey) => {
+          if (isForScoring(tKey, translation[tKey])) {
+            return [...tPrev, translation[tKey]];
+          }
+          return tPrev;
+        }, []);
+        return [...prev, ...t];
+      }
+
+      if (isForScoring(key, doc[key])) {
+        return [...prev, doc[key]];
+      }
+
+      return prev;
+    }, []).join(' ');
+
+    return tokenize(text, lang);
   });
 
-  console.timeEnd('search-time');
+  const tfidf = new TfIdf();
+  docs.forEach(d => tfidf.addDocument(d));
+
+  tfidf.tfidfs(tokens, (i, score) => {
+    matched[i].score = score;
+  });
+
+  const results = matched.sort((a, b) => {
+    if (a.score < b.score) return 1;
+    if (a.score > b.score) return -1;
+    return 0;
+  });
+
+  logger.separator();
+  logger.debug('search tokens: ', tokens);
+  results.forEach(e => {
+    const keys = e.tokens.map(t => t.token);
+    logger.debug(e.score, keys, e.ref.translation.name);
+  });
+
   const searchTimes = process.hrtime(start); // => [second, nano-second]
   const searchTimeMS = Math.round(searchTimes[1] / 1000000 * 1000) / 1000;
-  logger.log('results    : ', results.length);
+  logger.debug('results    : ', results.length);
+  logger.debug('search-time: ', searchTimeMS, 'ms');
 
   return {
     results: results,
