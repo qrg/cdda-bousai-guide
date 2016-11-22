@@ -105,7 +105,7 @@ export default class Indexer extends Store {
       return;
     }
 
-    if (isString(doc[key]) && !this.isIgnoreKey(key)) {
+    if (isValid(key, doc[key])) {
       const tokens = new Tokenizer('en').tokenize(doc[key]);
       this.addPosting(tokens, docId, key);
     }
