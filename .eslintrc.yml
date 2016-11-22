@@ -42,6 +42,8 @@ rules:
     - error
   prefer-const:
     - error
+  no-return-await:
+    - error
   prefer-rest-params:
     - warn
   prefer-spread:
