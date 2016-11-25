@@ -1,7 +1,7 @@
 'use strict';
 
 import {join} from 'path';
-
+import {TfIdf} from 'natural';
 import Store from './store';
 import Tokenizer from './tokenizers/tokenizer';
 import logger from './logger';
@@ -51,14 +51,17 @@ export default class Indexer extends Store {
     let count = 0;
     const max = this.docs.size;
 
-    tasks.push(() => this.emit('build-start'));
+    tasks.push(() => {
+      this.emit('build-start');
+      logger.info('Constructing index...');
+      this._docsTexts = new Map();
+    });
 
-    logger.info('Constructing index...');
     this.docs.forEach((doc, id) => {
       const task = () => {
         return new Promise(done => {
           Object.keys(doc).forEach(key => {
-            this._add(doc, id, key);
+            this.addPostingByKey(doc, id, key);
           });
 
           count++;
@@ -76,13 +79,31 @@ export default class Indexer extends Store {
     });
 
     tasks.push(() => {
-      this.sortPostingList();
-      return Promise.resolve();
+      this.forEach((postingList, token) => {
+        const tfidf = new TfIdf();
+        postingList.forEach(p => {
+          const docTexts = this._docsTexts.get(p.id);
+          tfidf.addDocument(docTexts, p.id);
+        });
+
+        tfidf.tfidfs([token], (i, score, id) => {
+          const posting = postingList.find(p => p.id === id);
+          posting.score = score;
+        });
+      });
+      Promise.resolve();
     });
+
+    tasks.push(() => {
+      this.sortPostingList();
+      Promise.resolve();
+    });
+
     tasks.push(() => {
       logger.info('Constructed index successfully');
+      this._docsTexts = null;
       this.emit('build-done');
-      return Promise.resolve();
+      Promise.resolve();
     });
 
     return tasks.reduce((prev, next) => {
@@ -90,7 +111,7 @@ export default class Indexer extends Store {
     }, Promise.resolve());
   }
 
-  _add(doc, docId, key) {
+  addPostingByKey(doc, docId, key) {
     const isValid = (key, val) => isString(val) && !this.isIgnoreKey(key);
 
     if (key === 'translation') {
@@ -99,6 +120,7 @@ export default class Indexer extends Store {
         if (isValid(tk, translation[tk])) {
           const tokens = new Tokenizer(this.lang).tokenize(translation[tk]);
           this.addPosting(tokens, docId, `${key}.${tk}`);
+          this._addDocText(tokens, docId);
         }
       });
 
@@ -108,6 +130,7 @@ export default class Indexer extends Store {
     if (isValid(key, doc[key])) {
       const tokens = new Tokenizer('en').tokenize(doc[key]);
       this.addPosting(tokens, docId, key);
+      this._addDocText(tokens, docId);
     }
   }
 
@@ -137,6 +160,11 @@ export default class Indexer extends Store {
 
       posting.keys.push(key);
     });
+  }
+
+  _addDocText(tokens, docId) {
+    const val = this._docsTexts.get(docId) || [];
+    this._docsTexts.set(docId, [...val, ...tokens]);
   }
 
   sortPostingList() {

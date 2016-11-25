@@ -2,8 +2,6 @@
 
 import Tokenizer from './tokenizers/tokenizer';
 import logger from './logger';
-import {TfIdf} from 'natural';
-import {isString} from '../lib/string';
 
 function tokenize(term, lang) {
   const words = term.split(/\s+/);
@@ -24,23 +22,41 @@ function tokenize(term, lang) {
 }
 
 function unifyById(prev, posting) {
-  const base = prev.findIndex(e => e.id === posting.id);
-  const dup = prev[base];
+  const dup = prev.find(e => e.id === posting.id);
 
-  if (base === -1) {
+  if (!dup) {
+    posting._scores = [posting.score];
     return [...prev, posting];
   }
 
   dup.tokens = [...dup.tokens, ...posting.tokens];
+  dup._scores = [...dup._scores, posting.score];
 
   return prev;
+}
+
+function hasStrictMatchedName(tokens, posting) {
+  const {ref} = posting;
+  return tokens.some(t => {
+    const name = ref.name;
+    const tName = ref.translation ? (ref.translation.name || '') : '';
+    return t === name || t === tName;
+  });
+}
+
+function hasPartialMatchedName(tokens, posting) {
+  const {ref} = posting;
+  return tokens.some(t => {
+    const name = ref.name || '';
+    const tName = ref.translation ? (ref.translation.name || '') : '';
+    return name.includes(t) || tName.includes(t);
+  });
 }
 
 export default function (term, items, index, config) {
   const start = process.hrtime();
 
   const lang = config.get('lang');
-  const ignoreKeys = config.get('index_ignore_keys');
   const tokens = tokenize(term, lang);
   const matched = tokens
     .map(token => [token, index.get(token)])
@@ -60,46 +76,21 @@ export default function (term, items, index, config) {
     })
     .reduce((prev, current) => [...prev, ...current], [])
     .reduce(unifyById, [])
+    .map(p => {
+      p.score = p._scores.reduce((t, v) => t + v) / p._scores.length;
+      delete p._scores;
+      return p;
+    })
     .filter(p => {
       const keys = p.tokens.map(t => t.token);
       return tokens.every(t => keys.includes(t));
     });
 
-  const isIgnoreKey = (key) => ignoreKeys.some(keyName => keyName === key);
-  const isForScoring = (key, val) => isString(val) && !isIgnoreKey(key);
-  const docs = matched.map(e => {
-    const doc = e.ref;
-
-    const text = Object.keys(doc).reduce((prev, key) => {
-      if (key === 'translation') {
-        const translation = doc[key];
-        const t = Object.keys(translation).reduce((tPrev, tKey) => {
-          if (isForScoring(tKey, translation[tKey])) {
-            return [...tPrev, translation[tKey]];
-          }
-          return tPrev;
-        }, []);
-        return [...prev, ...t];
-      }
-
-      if (isForScoring(key, doc[key])) {
-        return [...prev, doc[key]];
-      }
-
-      return prev;
-    }, []).join(' ');
-
-    return tokenize(text, lang);
-  });
-
-  const tfidf = new TfIdf();
-  docs.forEach(d => tfidf.addDocument(d));
-
-  tfidf.tfidfs(tokens, (i, score) => {
-    matched[i].score = score;
-  });
-
   const results = matched.sort((a, b) => {
+    if (hasStrictMatchedName(tokens, a)) return -1;
+    if (hasStrictMatchedName(tokens, b)) return 1;
+    if (hasPartialMatchedName(tokens, a)) return -1;
+    if (hasPartialMatchedName(tokens, b)) return 1;
     if (a.score < b.score) return 1;
     if (a.score > b.score) return -1;
     return 0;
