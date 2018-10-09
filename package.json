@@ -116,5 +116,10 @@
       "babel-register"
     ],
     "babel": "inherit"
+  },
+  "engines": {
+    "node" : "6.9.2",
+    "npm" : "4.0.5",
+    "yarn": "1.10.1"
   }
 }
